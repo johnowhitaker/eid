@@ -122,7 +122,6 @@ class Herd:
             # Next elephant (next row)
             e = Elephant()
             e.setID(sheet.cell(row, 0).value)
-            e.setPhotoFolder(photo_folder) ##<<<< WRONG, remove...
             # Go through columns.
             column = 1
             while column<sheet.ncols:
@@ -283,48 +282,6 @@ class EID_FORM(QtGui.QWidget):
     # Inefficient, and struggles with large images apparetly << fixed? Yup :)
     def update_pics_area(self, elephants):
         print "updating picture area"
-        #Clear the UI
-        # for e in elephants:
-        #     # Check if we already have a pic of it up
-        #     already_added = False
-        #     for ellie in self.picture_elephants.values():
-        #         if e.getID() == ellie.getID():
-        #             already_added = True
-        #             break
-        #     if already_added:
-        #         pass
-        #     #otherwise:
-
-            # lb1 = QtGui.QLabel(e.getID())
-            # g = QtGui.QWidget()
-            # g.setLayout(QtGui.QHBoxLayout())
-            # g.layout().addWidget(lb1)
-            # self.picture_elephants[lb1] = e
-            # self.clickable(lb1).connect(self.show_notes)
-            # for p in e.getPhotos():
-            #     lb = QtGui.QLabel()
-            #     lb.setGeometry(10, 10, 400, 400)
-            #     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
-            #     g.layout().addWidget(lb)
-            #     self.picture_elephants[lb] = e
-            #     self.clickable(lb).connect(self.show_notes)
-            # self.ui.scrlw.layout().addWidget(g)
-            # self.pic_area_widgets.append(g)
-
-        # # Get rid of unwanted ones
-        # to_delete = []
-        # for widget in self.picture_elephants:
-        #     e = self.picture_elephants[widget]
-        #     keeping = False
-        #     for ellie in elephants:
-        #         if ellie.getID() == e.getID():
-        #             keeping = True
-        #     if not keeping:
-        #         to_delete.append(widget)
-        #         widget.deleteLater()
-        # for w in to_delete:
-        #     del self.picture_elephants[w]
-
         for widget in self.picture_elephants:
             e = self.picture_elephants[widget]
             keeping = False
@@ -368,12 +325,6 @@ class EID_FORM(QtGui.QWidget):
 
     def update_herd(self, elephants):
 
-        # #Clear the UI
-        # while self.ui.scrlw.layout().count():
-        #     item = self.ui.scrlw.layout().takeAt(0)
-        #     widget = item.widget()
-        #     widget.deleteLater()
-
         if len(elephants) == 0:
             print "No matches"
             return 0
@@ -385,8 +336,6 @@ class EID_FORM(QtGui.QWidget):
         e = self.picture_elephants[lb]
         print "EID: ", e.getID()
         print "NOTES:", e.getNotes()
-        # print e.getPhotos()
-        # print e.getFeatures()
 
     def filter_elephants(self):
         root = self.model.invisibleRootItem() # get model properly?
@@ -418,5 +367,3 @@ if __name__ == "__main__":
     myapp = EID_FORM(SPREADSHEET, SHEETNUM, PHOTODIR)
     myapp.show()
     sys.exit(app.exec_())
-
-#root.mainloop()
