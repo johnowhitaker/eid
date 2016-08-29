@@ -51,8 +51,8 @@ class Elephant:
             self.photos.extend(glob.glob(self.photo_folder+'/'+ext))
 
     def setSmallPhotos(self, folder):
-        self.small_photos = glob.glob(folder+'/'+'*.small')
-        for p in small_photos:
+        self.small_photos = glob.glob(folder+"/" + self.getID().upper()+'/*.small')
+        for p in self.small_photos:
             p = p[:-6] #remove the .small part
 
     def getPhotos(self):
@@ -122,7 +122,7 @@ class Herd:
             # Next elephant (next row)
             e = Elephant()
             e.setID(sheet.cell(row, 0).value)
-            e.setPhotoFolder(photo_folder)
+            e.setPhotoFolder(photo_folder) ##<<<< WRONG, remove...
             # Go through columns.
             column = 1
             while column<sheet.ncols:
@@ -200,6 +200,8 @@ class EID_FORM(QtGui.QWidget):
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
 
         self.load_herd(self.herd.getElephants())
+        for e in self.herd.getElephants():
+            e.setSmallPhotos(photo_folder)
         self.init_picture_area(self.herd.getElephants())
 
     # GO through every item in the tree view and set to un-checked. Doeasn't apply filter
@@ -345,7 +347,7 @@ class EID_FORM(QtGui.QWidget):
             g.layout().addWidget(lb1)
             self.picture_elephants[lb1] = e
             self.clickable(lb1).connect(self.show_notes)
-            if len(e.getSmallPhotos)!=0:
+            if len(e.getSmallPhotos())!=0:
                 for p in e.getSmallPhotos():
                     lb = QtGui.QLabel()
                     lb.setGeometry(10, 10, 400, 400)
@@ -417,4 +419,4 @@ if __name__ == "__main__":
     myapp.show()
     sys.exit(app.exec_())
 
-root.mainloop()
+#root.mainloop()
