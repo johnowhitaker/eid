@@ -192,6 +192,10 @@ class EID_FORM(QtGui.QWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
 
+        # For info on specific ellies
+        self.e_info_diag = E_INFO_DIALOG(self)
+        self.selected_e = None
+
         self.herd = Herd(spreadsheet, 3, photo_folder)
 
         # Connect btn_load_herd to function
@@ -347,6 +351,10 @@ class EID_FORM(QtGui.QWidget):
         e = self.picture_elephants[lb]
         print "EID: ", e.getID()
         print "NOTES:", e.getNotes()
+        self.selected_e = e
+        self.e_info_diag.setElephant(e)
+        self.e_info_diag.exec_()
+
 
     def filter_elephants(self):
         root = self.model.invisibleRootItem() # get model properly?
@@ -371,6 +379,25 @@ class EID_FORM(QtGui.QWidget):
             i += 1
         filtered_elephants = self.herd.filterLoose(filter_values, 0) # <<<<<<< Change to 0 to do strict filter
         self.update_herd(filtered_elephants)
+
+class E_INFO_DIALOG(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(E_INFO_DIALOG, self).__init__(parent)
+
+        self.buttonBox = QtGui.QDialogButtonBox(self)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+
+        self.textBrowser = QtGui.QTextBrowser(self)
+        self.textBrowser.append("This is a QTextBrowser!")
+
+        self.verticalLayout = QtGui.QVBoxLayout(self)
+        self.verticalLayout.addWidget(self.textBrowser)
+        self.verticalLayout.addWidget(self.buttonBox)
+
+    def setElephant(self, e):
+        self.textBrowser.clear()
+        self.textBrowser.append(e.getID())
 
 # The main loop - run if we directly run this file.
 if __name__ == "__main__":
