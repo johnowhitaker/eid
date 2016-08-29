@@ -198,10 +198,10 @@ class EID_FORM(QtGui.QWidget):
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
 
-        self.load_herd(self.herd.getElephants())
-        for e in self.herd.getElephants():
+        self.load_herd(self.herd.getElephants()[:10])
+        for e in self.herd.getElephants()[:10]:
             e.setSmallPhotos(photo_folder)
-        self.init_picture_area(self.herd.getElephants())
+        self.init_picture_area(self.herd.getElephants()[:10])
 
     # GO through every item in the tree view and set to un-checked. Doeasn't apply filter
     def clearFilters(self, btn):
@@ -298,28 +298,39 @@ class EID_FORM(QtGui.QWidget):
     #Adding the pictures, and clicking on them calls show_notes
     def init_picture_area(self, elephants):
         for e in elephants:
-            lb1 = QtGui.QLabel(e.getID())
+
             g = QtGui.QWidget()
-            g.setLayout(QtGui.QHBoxLayout())
-            g.layout().addWidget(lb1)
-            self.picture_elephants[lb1] = e
-            self.clickable(lb1).connect(self.show_notes)
+            lay = QtGui.QHBoxLayout()
+            g.setLayout(lay)
+            pics = []
+            small = False
             if len(e.getSmallPhotos())!=0:
-                for p in e.getSmallPhotos():
-                    lb = QtGui.QLabel()
-                    lb.setGeometry(10, 10, 400, 400)
-                    lb.setPixmap(QtGui.QPixmap(p))
-                    g.layout().addWidget(lb)
-                    self.picture_elephants[lb] = e
-                    self.clickable(lb).connect(self.show_notes)
-            else:
-                for p in e.getPhotos():
-                    lb = QtGui.QLabel()
+                pics = e.getSmallPhotos()
+                small = True
+            elif len(e.getPhotos())!=0:
+                pics = e.getPhotos()
+
+            # Uncomment this for a name before each pic
+            # lb1 = QtGui.QLabel(e.getID())
+            # self.picture_elephants[lb1] = e
+            # self.clickable(lb1).connect(self.show_notes)
+            # g.layout().addWidget(lb1)
+
+            for p in pics:
+                lb = QtGui.QLabel()
+                if not small:
                     lb.setGeometry(10, 10, 400, 400)
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
-                    g.layout().addWidget(lb)
-                    self.picture_elephants[lb] = e
-                    self.clickable(lb).connect(self.show_notes)
+                else:
+                    lb.setPixmap(QtGui.QPixmap(p))
+                #Overlay the elephant name
+                lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
+                lb1.setText(e.getID())
+                lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
+                g.layout().addWidget(lb)
+                self.picture_elephants[lb] = e
+                self.clickable(lb).connect(self.show_notes)
+            lay.addStretch(1)
             self.ui.scrlw.layout().addWidget(g)
             self.pic_area_widgets.append(g)
 
