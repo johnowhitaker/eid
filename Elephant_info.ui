@@ -27,9 +27,6 @@
    <item row="1" column="1">
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0">
-      <widget class="QGraphicsView" name="graphicsView"/>
-     </item>
-     <item row="0" column="1">
       <widget class="QScrollArea" name="scrollArea">
        <property name="widgetResizable">
         <bool>true</bool>
@@ -39,7 +36,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>241</width>
+          <width>503</width>
           <height>415</height>
          </rect>
         </property>
@@ -50,7 +47,7 @@
     </layout>
    </item>
    <item row="0" column="1">
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="notes_label">
      <property name="text">
       <string>TextLabel</string>
      </property>

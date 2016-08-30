@@ -12,6 +12,7 @@
 import glob, xlrd, os, sys
 from PyQt4 import QtCore, QtGui
 from test_ui import Ui_Form
+from einfo_dialog import Ui_Dialog
 
 #************************************************************************************
 #   THE IMPORTANT BITS - WILL ADD OTHER PARAMETERS HERE FOR EASY CONFIGURATION     **
@@ -184,7 +185,6 @@ class Herd:
 class EID_FORM(QtGui.QWidget):
 
     picture_elephants = {}
-    pic_area_widgets = [] # Cheap late night hack - will fix at some point
 
     def __init__(self, spreadsheet, sheet_num,  photo_folder, parent=None):
         # UI from designer
@@ -282,7 +282,6 @@ class EID_FORM(QtGui.QWidget):
         tree.setModel(model)
         tree.show()
 
-
     # Inefficient, and struggles with large images apparetly << fixed? Yup :)
     def update_pics_area(self, elephants):
         print "updating picture area"
@@ -297,7 +296,6 @@ class EID_FORM(QtGui.QWidget):
                 widget.parent().show()
             else:
                 widget.parent().hide()
-
 
     #Adding the pictures, and clicking on them calls show_notes
     def init_picture_area(self, elephants):
@@ -336,7 +334,6 @@ class EID_FORM(QtGui.QWidget):
                 self.clickable(lb).connect(self.show_notes)
             lay.addStretch(1)
             self.ui.scrlw.layout().addWidget(g)
-            self.pic_area_widgets.append(g)
 
     def update_herd(self, elephants):
 
@@ -354,7 +351,6 @@ class EID_FORM(QtGui.QWidget):
         self.selected_e = e
         self.e_info_diag.setElephant(e)
         self.e_info_diag.exec_()
-
 
     def filter_elephants(self):
         root = self.model.invisibleRootItem() # get model properly?
@@ -383,21 +379,87 @@ class EID_FORM(QtGui.QWidget):
 class E_INFO_DIALOG(QtGui.QDialog):
     def __init__(self, parent=None):
         super(E_INFO_DIALOG, self).__init__(parent)
+        self.ui = Ui_Dialog()
 
-        self.buttonBox = QtGui.QDialogButtonBox(self)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.ui.setupUi(self)
 
-        self.textBrowser = QtGui.QTextBrowser(self)
-        self.textBrowser.append("This is a QTextBrowser!")
 
-        self.verticalLayout = QtGui.QVBoxLayout(self)
-        self.verticalLayout.addWidget(self.textBrowser)
-        self.verticalLayout.addWidget(self.buttonBox)
+        self.viewer = PhotoViewer(self)
+        self.ui.gridLayout.addWidget(self.viewer)
+        # self.buttonBox = QtGui.QDialogButtonBox(self)
+        # self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        # self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        #
+        # self.textBrowser = QtGui.QTextBrowser(self)
+        # self.textBrowser.append("This is a QTextBrowser!")
+        #
+        # self.verticalLayout = QtGui.QVBoxLayout(self)
+        # self.verticalLayout.addWidget(self.textBrowser)
+        # self.verticalLayout.addWidget(self.buttonBox)
 
     def setElephant(self, e):
-        self.textBrowser.clear()
-        self.textBrowser.append(e.getID())
+        self.ui.notes_label.setText(e.getID())
+        self.setPhoto(e.getPhotos()[0])
+
+    def setPhoto(self, p):
+        self.viewer.setPhoto(QtGui.QPixmap(p))
+
+## This class taken from stackoverflow, user ekhumoro - saves lots of time
+class PhotoViewer(QtGui.QGraphicsView):
+    def __init__(self, parent):
+        super(PhotoViewer, self).__init__(parent)
+        self._zoom = 0
+        self._scene = QtGui.QGraphicsScene(self)
+        self._photo = QtGui.QGraphicsPixmapItem()
+        self._scene.addItem(self._photo)
+        self.setScene(self._scene)
+        self.setTransformationAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtGui.QGraphicsView.AnchorUnderMouse)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
+        self.setFrameShape(QtGui.QFrame.NoFrame)
+
+    def fitInView(self):
+        rect = QtCore.QRectF(self._photo.pixmap().rect())
+        if not rect.isNull():
+            unity = self.transform().mapRect(QtCore.QRectF(0, 0, 1, 1))
+            self.scale(1 / unity.width(), 1 / unity.height())
+            viewrect = self.viewport().rect()
+            scenerect = self.transform().mapRect(rect)
+            factor = min(viewrect.width() / scenerect.width(),
+                         viewrect.height() / scenerect.height())
+            self.scale(factor, factor)
+            self.centerOn(rect.center())
+            self._zoom = 0
+
+    def setPhoto(self, pixmap=None):
+        self._zoom = 0
+        if pixmap and not pixmap.isNull():
+            self.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
+            self._photo.setPixmap(pixmap)
+            self.fitInView()
+        else:
+            self.setDragMode(QtGui.QGraphicsView.NoDrag)
+            self._photo.setPixmap(QtGui.QPixmap())
+
+    def zoomFactor(self):
+        return self._zoom
+
+    def wheelEvent(self, event):
+        if not self._photo.pixmap().isNull():
+            if event.delta() > 0:
+                factor = 1.25
+                self._zoom += 1
+            else:
+                factor = 0.8
+                self._zoom -= 1
+            if self._zoom > 0:
+                self.scale(factor, factor)
+            elif self._zoom == 0:
+                self.fitInView()
+            else:
+                self._zoom = 0
 
 # The main loop - run if we directly run this file.
 if __name__ == "__main__":
