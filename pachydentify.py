@@ -23,6 +23,13 @@ SPREADSHEET = os.getcwd() + "/../photo_id_29_aug.xlsm"
 SHEETNUM = 3
 PHOTODIR = os.getcwd() + "/../HipID_Photos"
 
+MAIN_WINDOW_SIZE = (1200, 800)
+PHOTO_HEIGHT = 400
+
+
+E_INSPECTOR_SIZE = (1200, 800)
+
+
 # Store features, elephant ID and so on
 class Elephant:
 
@@ -44,22 +51,19 @@ class Elephant:
     def getMisMatches(self):
         return self.mismatches
 
-    def setPhotoArr(self, photos):
-        self.photos = photos
-
     def setPhotoFolder(self, folder):
         self.photo_folder = folder
         # Are these enough extensions? Who knows...
         for ext in ['*.gif', '*.png', '*.PNG', '*.jpg', '*.JPG', '*.JPEG', '*.jpeg']:
             self.photos.extend(glob.glob(self.photo_folder+'/'+ext))
 
-    def setSmallPhotoFolder(self, folder):
+    def setSmallPhotoFolder(self, folder): # merge into setPhotoFolder?
         self.small_photos = glob.glob(folder+'/*.small')
         for p in self.small_photos:
             p = p[:-6] #remove the .small part
         print self.small_photos[0]
 
-    def getPhotos(self):
+    def getPhotos(self): # Is this needed? Or am i being a java guy?
         return self.photos
 
     def getSmallPhotos(self):
@@ -71,9 +75,9 @@ class Elephant:
             if self.features[f]!= '':
                 print(f + ": " + self.features[f])
 
-    def showPhoto(self, n):
-        im = Image.open(self.photos[n])
-        im.show()
+    # def showPhoto(self, n):
+    #     im = Image.open(self.photos[n])
+    #     im.show()
 
     def setFeature(self, fname, value):
         self.features[fname] = str(value)
@@ -81,7 +85,7 @@ class Elephant:
     def getFeature(self, fname):
         return self.features[fname]
 
-    def getFeatures(self): #make safe <<<<<<<
+    def getFeatures(self): #?safe?
         return self.features
 
     def setNote(self, fname, value):
@@ -90,7 +94,7 @@ class Elephant:
     def getNote(self, fname):
         return self.notes[fname]
 
-    def getNotes(self): #make safe <<<<<<<
+    def getNotes(self): #?
         return self.notes
 
     def setID(self, id):
@@ -338,6 +342,14 @@ class EID_FORM(QtGui.QWidget):
             # self.clickable(lb1).connect(self.show_notes)
             # g.layout().addWidget(lb1)
 
+            # Put smallest pic (template) first
+            for i in range(len(pics)):
+                p = pics[i]
+                os.stat(pics[0]).st_size
+                if os.stat(p).st_size<os.stat(pics[0]).st_size:
+                    pics[0], pics[i] = pics[i], pics[0]
+
+
             for p in pics:
                 lb = QtGui.QLabel()
                 if not small:
@@ -346,11 +358,11 @@ class EID_FORM(QtGui.QWidget):
                 else:
                     lb.setPixmap(QtGui.QPixmap(p))
                 #Overlay the elephant name and date taken
-                # f = open(p, 'rb')
-                # tags = exifread.process_file(f)
+                f = open(p, 'rb')
+                tags = exifread.process_file(f)
                 date = ''
-                # if 'EXIF DateTimeDigitized' in tags.keys():
-                #     date = str(tags['EXIF DateTimeDigitized'])
+                if 'EXIF DateTimeDigitized' in tags.keys():
+                    date = str(tags['EXIF DateTimeDigitized'])
                 lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
                 lb1.setText(e.getID() + " - " +date)
                 lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
