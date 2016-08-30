@@ -13,6 +13,8 @@ import glob, xlrd, os, sys
 from PyQt4 import QtCore, QtGui
 from test_ui import Ui_Form
 from einfo_dialog import Ui_Dialog
+import exifread
+
 
 #************************************************************************************
 #   THE IMPORTANT BITS - WILL ADD OTHER PARAMETERS HERE FOR EASY CONFIGURATION     **
@@ -51,10 +53,11 @@ class Elephant:
         for ext in ['*.gif', '*.png', '*.PNG', '*.jpg', '*.JPG', '*.JPEG', '*.jpeg']:
             self.photos.extend(glob.glob(self.photo_folder+'/'+ext))
 
-    def setSmallPhotos(self, folder):
-        self.small_photos = glob.glob(folder+"/" + self.getID().upper()+'/*.small')
+    def setSmallPhotoFolder(self, folder):
+        self.small_photos = glob.glob(folder+'/*.small')
         for p in self.small_photos:
             p = p[:-6] #remove the .small part
+        print self.small_photos[0]
 
     def getPhotos(self):
         return self.photos
@@ -133,7 +136,18 @@ class Herd:
                 else:
                     e.setNote(str(heading), val)
                 column +=1
-            e.setPhotoFolder(photo_folder+"/" + e.getID().upper())
+            # :(
+            if os.path.isdir(photo_folder+"/" + e.getID().upper()):
+                e.setPhotoFolder(photo_folder+"/" + e.getID().upper())
+            elif os.path.isdir(photo_folder+"/" + e.getID()):
+                e.setPhotoFolder(photo_folder+"/" + e.getID())
+
+            # fix this <<<
+            if os.path.isdir(photo_folder+"/" + e.getID().upper()):
+                e.setSmallPhotoFolder(photo_folder+"/" + e.getID().upper())
+            elif os.path.isdir(photo_folder+"/" + e.getID()):
+                e.setSmallPhotoFolder(photo_folder+"/" + e.getID())
+
             elephants.append(e)
             row += 1
         return elephants
@@ -202,10 +216,8 @@ class EID_FORM(QtGui.QWidget):
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
 
-        self.load_herd(self.herd.getElephants()[:10])
-        for e in self.herd.getElephants()[:10]:
-            e.setSmallPhotos(photo_folder)
-        self.init_picture_area(self.herd.getElephants()[:10])
+        self.load_herd(self.herd.getElephants())
+        self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
 
         self.resize(1200, 800) ## Fix <<<
 
@@ -248,6 +260,9 @@ class EID_FORM(QtGui.QWidget):
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_Escape:
             self.close()
+        else:
+            print e.key()
+
     # Run when the "Apply Filter" button is clicked
     def filterClicked(self, btn):
         self.filter_elephants()
@@ -317,7 +332,7 @@ class EID_FORM(QtGui.QWidget):
             elif len(e.getPhotos())!=0:
                 pics = e.getPhotos()
 
-            # Uncomment this for a name before each pic
+            #Uncomment this for a name before each pic
             # lb1 = QtGui.QLabel(e.getID())
             # self.picture_elephants[lb1] = e
             # self.clickable(lb1).connect(self.show_notes)
@@ -330,10 +345,16 @@ class EID_FORM(QtGui.QWidget):
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
                 else:
                     lb.setPixmap(QtGui.QPixmap(p))
-                #Overlay the elephant name
+                #Overlay the elephant name and date taken
+                # f = open(p, 'rb')
+                # tags = exifread.process_file(f)
+                date = ''
+                # if 'EXIF DateTimeDigitized' in tags.keys():
+                #     date = str(tags['EXIF DateTimeDigitized'])
                 lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
-                lb1.setText(e.getID())
+                lb1.setText(e.getID() + " - " +date)
                 lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
+
                 g.layout().addWidget(lb)
                 self.picture_elephants[lb] = e
                 self.clickable(lb).connect(self.show_notes)
@@ -405,6 +426,7 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.pic_num = 0
         if self.elephant != None:
             self.setElephant(self.elephant)
+        self.viewer.fitInView()
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_Escape:
