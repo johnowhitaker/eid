@@ -207,6 +207,8 @@ class EID_FORM(QtGui.QWidget):
             e.setSmallPhotos(photo_folder)
         self.init_picture_area(self.herd.getElephants()[:10])
 
+        self.resize(1200, 800) ## Fix <<<
+
     # GO through every item in the tree view and set to un-checked. Doeasn't apply filter
     def clearFilters(self, btn):
         root = self.model.invisibleRootItem() # get model properly?
@@ -380,6 +382,7 @@ class EID_FORM(QtGui.QWidget):
         self.update_herd(filtered_elephants)
 
 class E_INFO_DIALOG(QtGui.QDialog):
+    elephant = None
     def __init__(self, parent=None):
         super(E_INFO_DIALOG, self).__init__(parent)
         self.ui = Ui_Dialog()
@@ -392,11 +395,16 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.viewer = PhotoViewer(self)
         self.splitter.addWidget(self.viewer)
         self.textBrowser = QtGui.QTextBrowser()
-        self.textBrowser.resize(100, 100)
         self.splitter.addWidget(self.textBrowser)
+        self.splitter.setSizes([1000, 200])
+
+        self.resize(1200, 800)
+        self.setGeometry(400, 0, 1200, 800)
+
 
         self.pic_num = 0
-        self.elephant = None
+        if self.elephant != None:
+            self.setElephant(self.elephant)
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_Escape:
@@ -416,6 +424,7 @@ class E_INFO_DIALOG(QtGui.QDialog):
     def setPhoto(self, p):
         self.viewer.setPhoto(QtGui.QPixmap(p))
         self.viewer.zoom(20)
+        self.viewer.fitInView()
     def setNotes(self, n):
         self.textBrowser.setText("")
         for note in n:
