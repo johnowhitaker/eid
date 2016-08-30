@@ -243,6 +243,9 @@ class EID_FORM(QtGui.QWidget):
         widget.installEventFilter(filter)
         return filter.clicked
 
+    def keyPressEvent(self, e):
+        if e.key() == QtCore.Qt.Key_Escape:
+            self.close()
     # Run when the "Apply Filter" button is clicked
     def filterClicked(self, btn):
         self.filter_elephants()
@@ -384,27 +387,41 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.ui.setupUi(self)
 
 
+        self.splitter = QtGui.QSplitter()
+        self.ui.horizontalLayout.addWidget(self.splitter)
         self.viewer = PhotoViewer(self)
-        self.ui.gridLayout.addWidget(self.viewer)
-        # self.buttonBox = QtGui.QDialogButtonBox(self)
-        # self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        # self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        #
-        # self.textBrowser = QtGui.QTextBrowser(self)
-        # self.textBrowser.append("This is a QTextBrowser!")
-        #
-        # self.verticalLayout = QtGui.QVBoxLayout(self)
-        # self.verticalLayout.addWidget(self.textBrowser)
-        # self.verticalLayout.addWidget(self.buttonBox)
+        self.splitter.addWidget(self.viewer)
+        self.textBrowser = QtGui.QTextBrowser()
+        self.textBrowser.resize(100, 100)
+        self.splitter.addWidget(self.textBrowser)
+
+        self.pic_num = 0
+        self.elephant = None
+
+    def keyPressEvent(self, e):
+        if e.key() == QtCore.Qt.Key_Escape:
+            self.close()
+        elif e.key() == QtCore.Qt.Key_N:
+            self.pic_num += 1
+            if len(self.elephant.getPhotos()) <= self.pic_num:
+                self.pic_num = 0
+            self.setPhoto(self.elephant.getPhotos()[self.pic_num])
 
     def setElephant(self, e):
-        self.ui.notes_label.setText(e.getID())
-        self.setPhoto(e.getPhotos()[0])
+        self.elephant = e
+        self.setWindowTitle(e.getID())
+        self.setPhoto(e.getPhotos()[self.pic_num])
+        self.setNotes(e.getNotes())
 
     def setPhoto(self, p):
         self.viewer.setPhoto(QtGui.QPixmap(p))
+        self.viewer.zoom(20)
+    def setNotes(self, n):
+        self.textBrowser.setText("")
+        for note in n:
+            self.textBrowser.append(note +": "+ n[note] + "\n")
 
-## This class taken from stackoverflow, user ekhumoro - saves lots of time
+## This class taken from stackoverflow, user ekhumoro, and edited a little
 class PhotoViewer(QtGui.QGraphicsView):
     def __init__(self, parent):
         super(PhotoViewer, self).__init__(parent)
@@ -445,6 +462,9 @@ class PhotoViewer(QtGui.QGraphicsView):
 
     def zoomFactor(self):
         return self._zoom
+
+    def zoom(self, f): #<< I added this
+        self._zoom += f
 
     def wheelEvent(self, event):
         if not self._photo.pixmap().isNull():

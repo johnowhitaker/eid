@@ -73,7 +73,11 @@
           <height>407</height>
          </rect>
         </property>
-        <layout class="QGridLayout" name="gridLayout_4"/>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="QTreeView" name="treeView"/>
+         </item>
+        </layout>
        </widget>
       </widget>
      </item>
