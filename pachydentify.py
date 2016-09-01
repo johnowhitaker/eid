@@ -23,7 +23,7 @@ SPREADSHEET = os.getcwd() + "/../photo_id_29_aug.xlsm"
 SHEETNUM = 3
 PHOTODIR = os.getcwd() + "/../Cropped"
 
-DEFAULT_ORDER = 'left'
+DEFAULT_ORDER = 'right'
 
 MAIN_WINDOW_SIZE = (1200, 800)
 PHOTO_HEIGHT = 400 #<< Add width?
@@ -246,8 +246,8 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         exitAction.triggered.connect(QtGui.qApp.quit)
         fileMenu.addAction(exitAction)
 
-        self.load_herd(self.herd.getElephants())
-        self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
+        self.load_herd(self.herd.getElephants()[:10])
+        self.init_picture_area(self.herd.getElephants()[:10]) # this should be in load herd?
 
         self.resize(1200, 800) ## Fix <<<
 
@@ -391,13 +391,13 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                     lb.setGeometry(10, 10, 400, 400)
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
                 else:
-                    lb.setPixmap(QtGui.QPixmap(p).scaled(self.photo_height, self.photo_height, QtCore.Qt.KeepAspectRatio))
+                    lb.setPixmap(QtGui.QPixmap(p))#.scaled(self.photo_height, self.photo_height, QtCore.Qt.KeepAspectRatio))
                 #Overlay the elephant name and date taken
-                # f = open(p, 'rb')
-                # tags = exifread.process_file(f)
+                f = open(p, 'rb')
+                tags = exifread.process_file(f) #Investigate piexif ?
                 date = ''
-                # if 'EXIF DateTimeDigitized' in tags.keys():
-                #     date = str(tags['EXIF DateTimeDigitized'])
+                if 'EXIF DateTimeDigitized' in tags.keys():
+                    date = str(tags['EXIF DateTimeDigitized'])
                 lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
                 lb1.setText(e.getID() + " - " +date)
                 lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
@@ -408,11 +408,24 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             lay.addStretch(1)
             self.ui.scrlw.layout().addWidget(g)
 
-    def show_text_filtered_images(self, w):
-        # for widget in self.picture_elephants:
-        #     widget.deleteLater()
+    def show_text_filtered_images(self, w): # currently not working
+        text = self.ui.txt_img_filter.text()
+        parents = []
+        for widget in self.picture_elephants:
+             if widget.parent() not in parents:
+                 parents.append(widget.parent())
+        for p in parents:
+            e = self.picture_elephants[p.children()[1]]
+            pics = e.getPhotos() #Problem! What if small?
+            index = 0
+            for pic in pics:
+                if text in pic:
+                    index = pics.index(pic)
+                    break
+            if index != 0:
+                p.children()[1], p.children()[1+index] = p.children()[1+index], p.children()[1]
+                print "swapping" + pics[index]
         # self.init_picture_area(self.herd.filtered_elephants)
-        self.scaleImages(200, 200)
 
     def update_herd(self, elephants):
 
@@ -425,10 +438,18 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
 
     def show_notes(self, lb):
         e = self.picture_elephants[lb]
+        pic_num = 0
+        for label in lb.parent().children()[1:]:
+            if label == lb:
+                pic_num = lb.parent().children().index(lb)-1
+                break
+            else:
+                pic_num += 1
+
         print "EID: ", e.getID()
         print "NOTES:", e.getNotes()
         self.selected_e = e
-        self.e_info_diag.setElephant(e)
+        self.e_info_diag.setElephant(e, pic_num)
         self.e_info_diag.exec_()
 
     def scaleImages(self, width, height):
@@ -502,9 +523,10 @@ class E_INFO_DIALOG(QtGui.QDialog):
                 self.pic_num = 0
             self.setPhoto(self.elephant.getPhotos()[self.pic_num])
 
-    def setElephant(self, e):
+    def setElephant(self, e, pic_num):
         self.elephant = e
         self.setWindowTitle(e.getID())
+        self.pic_num = pic_num
         self.setPhoto(e.getPhotos()[self.pic_num])
         self.setNotes(e.getNotes())
 

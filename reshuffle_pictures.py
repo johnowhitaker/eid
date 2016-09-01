@@ -2,23 +2,76 @@
 
 
 import glob, os, fnmatch, sys
+import piexif
 
-for pic in glob.glob('/media/jonathan/9076-6521/renamed/*.jpg'):
-    folder = pic.split('#')[0]
-    fn = folder + "/" + pic.split('#')[1][:-4]
-    print fn
-    os.system("mv \"" + pic + "\" " + "\"" + fn + "\"")
-
-for pic in glob.glob('/media/jonathan/9076-6521/renamed/*.jpg'):
-    folder = pic.split('#')[0]
-    fn = folder + "/" + pic.split('#')[1][:-4]
-    print fn
-    os.system("mv \"" + pic + "\" " + "\"" + fn + "\"")
-
+# Sort out tags
+ogfolder = os.getcwd() + "/../HipID_Photos/"
+cropped_folder = os.getcwd() + "/../Cropped/"
+ogsubfolders = [name for name in os.listdir(ogfolder) if os.path.isdir(os.path.join(ogfolder, name))]
+cropped_subfolders = [name for name in os.listdir(cropped_folder) if os.path.isdir(os.path.join(cropped_folder, name))]
+pics = []
+cropped_pics = []
+for subfolder in ogsubfolders:
+    for p in glob.glob(ogfolder+subfolder+"/*.*"):
+        pics.append (p)
 
 
-#Compress:
+for subfolder in cropped_subfolders:
+    for p in glob.glob(cropped_folder+subfolder+"/*.*"):
+        cropped_pics.append (p)
+
+print len(pics)
+print len(cropped_pics)
+print pics[0]
+print cropped_pics[0]
+for i in range(len(cropped_pics)):
+    if pics[i].split("/")[-1] != cropped_pics[i].split("/")[-1]:
+        print pics[i], cropped_pics[i]
+    else:
+        try:
+            piexif.transplant(pics[i], cropped_pics[i])
+        except:
+            print pics[i]
+
+
+#copy across exif data
+f = open(p, 'rb')
+# tags = exifread.process_file(f)
+date = ''
+# if 'EXIF DateTimeDigitized' in tags.keys():
+#     date = str(tags['EXIF DateTimeDigitized'])
+
+
+
+
+
+
+
+
+# Moving back into folders
+# for pic in glob.glob('/media/jonathan/9076-6521/renamed/*.JPG'):
+#     folder = pic.split('#')[0]
+#     fn = folder + "/" + pic.split('#')[1][:-4]
+#     print fn
+#     os.system("mv \"" + pic + "\" " + "\"" + fn + "\"")
+#
+# for pic in glob.glob('/media/jonathan/9076-6521/renamed/*.jpg'):
+#     folder = pic.split('#')[0]
+#     fn = folder + "/" + pic.split('#')[1][:-4]
+#     print fn
+#     os.system("mv \"" + pic + "\" " + "\"" + fn + "\"")
+
+
+
+
+
+#resize:
 #find . -iname '*.JPG' | while read file; do convert "$file" -resize 800x400 "$file".small; done
+
+
+
+
+
 
 #The original shell script
 # for directory in *; do
