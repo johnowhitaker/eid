@@ -31,10 +31,12 @@ PHOTO_HEIGHT = 400 #<< Add width?
 
 E_INSPECTOR_SIZE = (1200, 800)
 
+#######################################################################################
 
 # Store features, elephant ID and so on
 class Elephant:
-
+    # So many of these getters and setters are unneccesary - the vars
+    # are mostly public. Need to figure out a best practice.
     def __init__(self):
         #self.photo_folder = photof
         self.photo_folder = ""#"../photos/BH003"
@@ -76,17 +78,13 @@ class Elephant:
             if self.features[f]!= '':
                 print(f + ": " + self.features[f])
 
-    # def showPhoto(self, n):
-    #     im = Image.open(self.photos[n])
-    #     im.show()
-
     def setFeature(self, fname, value):
         self.features[fname] = str(value)
 
     def getFeature(self, fname):
         return self.features[fname]
 
-    def getFeatures(self): #?safe?
+    def getFeatures(self):
         return self.features
 
     def setNote(self, fname, value):
@@ -200,6 +198,7 @@ class Herd:
     def clearFilters():
         self.filtered_elephants = [e for e in self.elephants]
 
+#######################################################################################
 # The GUI side of things, currently holding most of the logic
 class EID_MAINWINDOW(QtGui.QMainWindow):
 
@@ -446,8 +445,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             else:
                 pic_num += 1
 
-        print "EID: ", e.getID()
-        print "NOTES:", e.getNotes()
+        print "Examining EID: ", e.getID()
         self.selected_e = e
         self.e_info_diag.setElephant(e, pic_num)
         self.e_info_diag.exec_()
@@ -528,11 +526,15 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.setWindowTitle(e.getID())
         self.pic_num = pic_num
         self.setPhoto(e.getPhotos()[self.pic_num])
-        self.setNotes(e.getNotes())
+        notes = {}
+        for n in e.getNotes():
+            notes[n] = e.getNotes()[n]
+        for f in e.getFeatures():
+            notes[f] = e.getFeature(f)
+        self.setNotes(notes)
 
     def setPhoto(self, p):
         self.viewer.setPhoto(QtGui.QPixmap(p))
-        self.viewer.zoom(20)
         self.viewer.fitInView()
     def setNotes(self, n):
         self.textBrowser.setText("")

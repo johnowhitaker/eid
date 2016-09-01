@@ -28,7 +28,7 @@ TODO:
 Still some bugs,
 zoom sucks (it's using fast scaling alg) - also, it should only zoom on one ellie perhaps?
 first load of E_Dialog has weird zoom level,
-clicking a photo should open THAT photo,
+clicking a photo should open THAT photo (kind of works, but not when the text filter has been applied)
 arrow keys should do sensible things
 We need a logo
 Speed is down - speed up things like exif read (for eg, pickle exif data? piexif?)
