@@ -11,7 +11,7 @@
 
 import glob, xlrd, os, sys
 from PyQt4 import QtCore, QtGui
-from test_ui import Ui_Form
+from eid_mainwindow import Ui_MainWindow
 from einfo_dialog import Ui_Dialog
 import exifread
 
@@ -23,8 +23,10 @@ SPREADSHEET = os.getcwd() + "/../photo_id_29_aug.xlsm"
 SHEETNUM = 3
 PHOTODIR = os.getcwd() + "/../HipID_Photos"
 
+DEFAULT_ORDER = 'left'
+
 MAIN_WINDOW_SIZE = (1200, 800)
-PHOTO_HEIGHT = 400
+PHOTO_HEIGHT = 400 #<< Add width?
 
 
 E_INSPECTOR_SIZE = (1200, 800)
@@ -199,14 +201,15 @@ class Herd:
         self.filtered_elephants = [e for e in self.elephants]
 
 # The GUI side of things, currently holding most of the logic
-class EID_FORM(QtGui.QWidget):
+class EID_MAINWINDOW(QtGui.QMainWindow):
 
     picture_elephants = {}
+    photo_height = 400
 
     def __init__(self, spreadsheet, sheet_num,  photo_folder, parent=None):
         # UI from designer
         QtGui.QWidget.__init__(self, parent)
-        self.ui = Ui_Form()
+        self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
         # For info on specific ellies
@@ -219,6 +222,29 @@ class EID_FORM(QtGui.QWidget):
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
         self.ui.btn_reorder_pics.clicked.connect(self.show_text_filtered_images)
+
+        # Menu
+        self.statusBar()
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&File')
+        #zoom in
+        exitAction = QtGui.QAction('&Zoom In', self)
+        exitAction.setShortcut('Ctrl+K')
+        exitAction.setStatusTip('Zoom in on potential matches')
+        exitAction.triggered.connect(self.zoom_in_images)
+        fileMenu.addAction(exitAction)
+        #zoom out
+        exitAction = QtGui.QAction('&Zoom Out', self)
+        exitAction.setShortcut('Ctrl+J')
+        exitAction.setStatusTip('Zoom out on potential matches')
+        exitAction.triggered.connect(self.zoom_out_images)
+        fileMenu.addAction(exitAction)
+        #exit
+        exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(QtGui.qApp.quit)
+        fileMenu.addAction(exitAction)
 
         self.load_herd(self.herd.getElephants())
         self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
@@ -350,15 +376,14 @@ class EID_FORM(QtGui.QWidget):
 
             # Put left or right pic first
             text = self.ui.txt_img_filter.text()
+            if text == '':
+                text = DEFAULT_ORDER
             #text_appearences = 0
-            if text != '':
-                #print "reordering by text: " + text
-                for i in range(len(pics)):
-                    p = pics[i]
-                    if str(text) in str(p):
-                        #text_appearences += 1
-                        pics[1], pics[i] = pics[i], pics[1]
-                    print pics[1] + " . " + text
+            for i in range(len(pics)):
+                p = pics[i]
+                if str(text) in str(p):
+                    #text_appearences += 1
+                    pics[1], pics[i] = pics[i], pics[1]
 
             for p in pics:
                 lb = QtGui.QLabel()
@@ -366,13 +391,13 @@ class EID_FORM(QtGui.QWidget):
                     lb.setGeometry(10, 10, 400, 400)
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
                 else:
-                    lb.setPixmap(QtGui.QPixmap(p))
+                    lb.setPixmap(QtGui.QPixmap(p).scaled(self.photo_height, self.photo_height, QtCore.Qt.KeepAspectRatio))
                 #Overlay the elephant name and date taken
-                # f = open(p, 'rb')
-                # tags = exifread.process_file(f)
+                f = open(p, 'rb')
+                tags = exifread.process_file(f)
                 date = ''
-                # if 'EXIF DateTimeDigitized' in tags.keys():
-                #     date = str(tags['EXIF DateTimeDigitized'])
+                if 'EXIF DateTimeDigitized' in tags.keys():
+                    date = str(tags['EXIF DateTimeDigitized'])
                 lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
                 lb1.setText(e.getID() + " - " +date)
                 lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
@@ -384,9 +409,10 @@ class EID_FORM(QtGui.QWidget):
             self.ui.scrlw.layout().addWidget(g)
 
     def show_text_filtered_images(self, w):
-        for widget in self.picture_elephants:
-            widget.deleteLater()
-        self.init_picture_area(self.herd.filtered_elephants)
+        # for widget in self.picture_elephants:
+        #     widget.deleteLater()
+        # self.init_picture_area(self.herd.filtered_elephants)
+        self.scaleImages(200, 200)
 
     def update_herd(self, elephants):
 
@@ -404,6 +430,18 @@ class EID_FORM(QtGui.QWidget):
         self.selected_e = e
         self.e_info_diag.setElephant(e)
         self.e_info_diag.exec_()
+
+    def scaleImages(self, width, height):
+        self.ui.statusBar().showMessage("Hello")
+        for lb in self.picture_elephants.keys(): #the labels with pictures
+            lb.setPixmap(lb.pixmap().scaled(height, height, QtCore.Qt.KeepAspectRatio))
+
+    def zoom_in_images(self):
+        self.photo_height += 100
+        self.scaleImages(self.photo_height, self.photo_height)
+    def zoom_out_images(self):
+        self.photo_height -= 100
+        self.scaleImages(self.photo_height, self.photo_height)
 
     def filter_elephants(self):
         root = self.model.invisibleRootItem() # get model properly?
@@ -542,6 +580,6 @@ class PhotoViewer(QtGui.QGraphicsView):
 # The main loop - run if we directly run this file.
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    myapp = EID_FORM(SPREADSHEET, SHEETNUM, PHOTODIR)
+    myapp = EID_MAINWINDOW(SPREADSHEET, SHEETNUM, PHOTODIR)
     myapp.show()
     sys.exit(app.exec_())
