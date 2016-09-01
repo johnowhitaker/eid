@@ -21,7 +21,7 @@ import exifread
 #************************************************************************************
 SPREADSHEET = os.getcwd() + "/../photo_id_29_aug.xlsm"
 SHEETNUM = 3
-PHOTODIR = os.getcwd() + "/../HipID_Photos"
+PHOTODIR = os.getcwd() + "/../Cropped"
 
 DEFAULT_ORDER = 'left'
 
@@ -393,11 +393,11 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 else:
                     lb.setPixmap(QtGui.QPixmap(p).scaled(self.photo_height, self.photo_height, QtCore.Qt.KeepAspectRatio))
                 #Overlay the elephant name and date taken
-                f = open(p, 'rb')
-                tags = exifread.process_file(f)
+                # f = open(p, 'rb')
+                # tags = exifread.process_file(f)
                 date = ''
-                if 'EXIF DateTimeDigitized' in tags.keys():
-                    date = str(tags['EXIF DateTimeDigitized'])
+                # if 'EXIF DateTimeDigitized' in tags.keys():
+                #     date = str(tags['EXIF DateTimeDigitized'])
                 lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
                 lb1.setText(e.getID() + " - " +date)
                 lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
@@ -432,7 +432,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.e_info_diag.exec_()
 
     def scaleImages(self, width, height):
-        self.ui.statusBar().showMessage("Hello")
+        #self.ui.statusBar().showMessage("Hello")
         for lb in self.picture_elephants.keys(): #the labels with pictures
             lb.setPixmap(lb.pixmap().scaled(height, height, QtCore.Qt.KeepAspectRatio))
 
