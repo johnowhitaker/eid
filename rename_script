@@ -1,0 +1,21 @@
+for directory in *; do
+  pushd "$directory"
+  index=1
+  for filename in *; do
+    extension="${filename##*.}"
+    if [ "$filename" != "$extension" ]; then
+      extension=".$extension"
+    else
+      # i.e. there is no dot in the file name
+      extension=""
+    fi
+    target_filename="${directory}$(printf "#")${filename}${extension}"
+    if [ -f "$target_filename" ]; then
+      echo "File ${target_filename} exists; aborting."
+      exit 3
+    fi
+    mv "$filename" "../${target_filename}"
+    ((index++))
+  done
+  popd
+done

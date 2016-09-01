@@ -61,7 +61,6 @@ class Elephant:
         self.small_photos = glob.glob(folder+'/*.small')
         for p in self.small_photos:
             p = p[:-6] #remove the .small part
-        print self.small_photos[0]
 
     def getPhotos(self): # Is this needed? Or am i being a java guy?
         return self.photos
@@ -219,6 +218,7 @@ class EID_FORM(QtGui.QWidget):
         # Connect btn_load_herd to function
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
+        self.ui.btn_reorder_pics.clicked.connect(self.show_text_filtered_images)
 
         self.load_herd(self.herd.getElephants())
         self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
@@ -345,10 +345,20 @@ class EID_FORM(QtGui.QWidget):
             # Put smallest pic (template) first
             for i in range(len(pics)):
                 p = pics[i]
-                os.stat(pics[0]).st_size
                 if os.stat(p).st_size<os.stat(pics[0]).st_size:
                     pics[0], pics[i] = pics[i], pics[0]
 
+            # Put left or right pic first
+            text = self.ui.txt_img_filter.text()
+            #text_appearences = 0
+            if text != '':
+                #print "reordering by text: " + text
+                for i in range(len(pics)):
+                    p = pics[i]
+                    if str(text) in str(p):
+                        #text_appearences += 1
+                        pics[1], pics[i] = pics[i], pics[1]
+                    print pics[1] + " . " + text
 
             for p in pics:
                 lb = QtGui.QLabel()
@@ -358,11 +368,11 @@ class EID_FORM(QtGui.QWidget):
                 else:
                     lb.setPixmap(QtGui.QPixmap(p))
                 #Overlay the elephant name and date taken
-                f = open(p, 'rb')
-                tags = exifread.process_file(f)
+                # f = open(p, 'rb')
+                # tags = exifread.process_file(f)
                 date = ''
-                if 'EXIF DateTimeDigitized' in tags.keys():
-                    date = str(tags['EXIF DateTimeDigitized'])
+                # if 'EXIF DateTimeDigitized' in tags.keys():
+                #     date = str(tags['EXIF DateTimeDigitized'])
                 lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
                 lb1.setText(e.getID() + " - " +date)
                 lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
@@ -372,6 +382,11 @@ class EID_FORM(QtGui.QWidget):
                 self.clickable(lb).connect(self.show_notes)
             lay.addStretch(1)
             self.ui.scrlw.layout().addWidget(g)
+
+    def show_text_filtered_images(self, w):
+        for widget in self.picture_elephants:
+            widget.deleteLater()
+        self.init_picture_area(self.herd.filtered_elephants)
 
     def update_herd(self, elephants):
 

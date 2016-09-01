@@ -1,8 +1,24 @@
-Hi TIm,
-You'll see I have a copy of your spreadsheet there as well, called elephants.xlsx, and the app expects a folder or shortcut to a folder called 'photos' in the app folder. You can replace that with yours - you'll just have to open load_ellie_data.py in a text editor and replace `EID_FORM(os.getcwd() + "/elephants.xlsx", 3, os.getcwd()+"/photos")` with `EID_FORM(\PATH\TO\YOUR\SPREADSHEET", 3, "\PATH\TO\YOUR\PHOTOS\FOLDER")`
+Pachydentify
 
-The only changes I made to the spreadsheet were to add a * to the column headings for notes and stuff - that lets my program know not to use those in the filter.
+Pachydentify is released under the GPL, the full text of this licence is at .....
 
-I need to do a lot of work making the code better - most of it is just hacked together in a rush :P
+Classes in the code
 
-Let me know any errors you hit!
+Elephant:
+
+Herd:
+- this is simply a collection of elephants. Can load data from a spreadsheet,
+  filter elephants...
+- herd.filter({'feature 1': [values], 'feature 2':[...], ...})
+
+EID_FORM:
+- The main window, which loads the data...
+
+E_INFO_DIALOG:
+- When a picture of an elephant is clicked, a new window opens. Here, the user can
+  zoom in on high res versions of the pictures associated with that elephant, and
+  see extra notes about the elephant.
+
+PhotoViewer:
+- This is a separate class, making some features of QGraphicsView easier to use.
+  Found on StackOverflow, by user ekhumoro, public domain?
