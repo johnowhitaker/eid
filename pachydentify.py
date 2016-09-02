@@ -23,7 +23,7 @@ SPREADSHEET = os.getcwd() + "/../photo_id_29_aug.xlsm"
 SHEETNUM = 3
 PHOTODIR = os.getcwd() + "/../Cropped"
 
-DEFAULT_ORDER = 'right'
+DEFAULT_ORDER = ''
 
 MAIN_WINDOW_SIZE = (1200, 800)
 PHOTO_HEIGHT = 400 #<< Add width?
