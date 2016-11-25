@@ -245,8 +245,8 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         exitAction.triggered.connect(QtGui.qApp.quit)
         fileMenu.addAction(exitAction)
 
-        self.load_herd(self.herd.getElephants()[:10])
-        self.init_picture_area(self.herd.getElephants()[:10]) # this should be in load herd?
+        self.load_herd(self.herd.getElephants())
+        self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
 
         self.resize(1200, 800) ## Fix <<<
 
@@ -374,15 +374,15 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                     pics[0], pics[i] = pics[i], pics[0]
 
             # Put left or right pic first
-            text = self.ui.txt_img_filter.text()
-            if text == '':
-                text = DEFAULT_ORDER
-            #text_appearences = 0
-            for i in range(len(pics)):
-                p = pics[i]
-                if str(text) in str(p):
-                    #text_appearences += 1
-                    pics[1], pics[i] = pics[i], pics[1]
+            # text = self.ui.txt_img_filter.text()
+            # if text == '':
+            #     text = DEFAULT_ORDER
+            # #text_appearences = 0
+            # for i in range(len(pics)):
+            #     p = pics[i]
+            #     if str(text) in str(p):
+            #         #text_appearences += 1
+            #         pics[1], pics[i] = pics[i], pics[1]
 
             for p in pics:
                 lb = QtGui.QLabel()
