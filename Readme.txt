@@ -34,3 +34,12 @@ We need a logo
 Speed is down - speed up things like exif read (for eg, pickle exif data? piexif?)
 Eliminate elephants with right click, restore on clear filter
 Status bar must show actual staus - how many match filter, what's happening etc
+
+
+Running in Windows
+
+Install python from python.org (the 2.7version), checking the option to add python.exe to path
+Install PyQt4 from  https://riverbankcomputing.com/software/pyqt/download, again, the appropriate 2.7 version
+In a command prompt, run 'pip install exifread' and 'pip install xlutils' to get the necessary libraries
+Open pachydentify.py and edit the lines pointing to your photo folder and spreadsheet details (This won't be needed in future versions)
+Navigate to the eid directory and run 'python pachydentify.py'
