@@ -9,19 +9,20 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import glob, xlrd, os, sys
+import glob, xlrd, os, sys, getopt
 from PyQt4 import QtCore, QtGui
 from eid_mainwindow import Ui_MainWindow
 from einfo_dialog import Ui_Dialog
 import exifread
+import argparse
 
 
 #************************************************************************************
 #   THE IMPORTANT BITS - WILL ADD OTHER PARAMETERS HERE FOR EASY CONFIGURATION     **
 #************************************************************************************
-SPREADSHEET = os.getcwd() + "/../photo_id_29_aug.xlsm"
-SHEETNUM = 3
-PHOTODIR = os.getcwd() + "/../Cropped"
+SPREADSHEET = os.getcwd() + "/../eid_sample_data/elephants.xlsx"
+SHEETNUM = 0
+PHOTODIR = os.getcwd() + "/../eid_sample_data/photos"
 
 DEFAULT_ORDER = ''
 
@@ -200,6 +201,8 @@ class Herd:
 
 #######################################################################################
 # The GUI side of things, currently holding most of the logic
+
+# The main window - criteria on the left and pics on the right.
 class EID_MAINWINDOW(QtGui.QMainWindow):
 
     picture_elephants = {}
@@ -215,7 +218,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.e_info_diag = E_INFO_DIALOG(self)
         self.selected_e = None
 
-        self.herd = Herd(spreadsheet, 3, photo_folder)
+        self.herd = Herd(spreadsheet, sheet_num, photo_folder)
 
         # Connect btn_load_herd to function
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
@@ -486,6 +489,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         filtered_elephants = self.herd.filterLoose(filter_values, 0) # <<<<<<< Change to 0 to do strict filter
         self.update_herd(filtered_elephants)
 
+# On clicking a picture, this window pops up
 class E_INFO_DIALOG(QtGui.QDialog):
     elephant = None
     def __init__(self, parent=None):
@@ -603,6 +607,18 @@ class PhotoViewer(QtGui.QGraphicsView):
 
 # The main loop - run if we directly run this file.
 if __name__ == "__main__":
+
+    # Parse comand line arguments
+    parser = argparse.ArgumentParser(description='Elephantphotoidentification app')
+    parser.add_argument('--data', nargs='?', help='Spreadsheet or .csv')
+    parser.add_argument('--sheetnum', nargs='?', help='Only if using spreadsheet')
+    parser.add_argument('--photodir', nargs='?', help='Base folder with photos')
+    args = parser.parse_args(sys.argv[1:])
+    PHOTODIR = args.photodir if (args.photodir != None) else PHOTODIR
+    SPREADSHEET = args.data if args.data != None else SPREADSHEET
+    SHEETNUM = int(args.sheetnum) if args.sheetnum != None else SHEETNUM
+
+    # Start the app
     app = QtGui.QApplication(sys.argv)
     myapp = EID_MAINWINDOW(SPREADSHEET, SHEETNUM, PHOTODIR)
     myapp.show()
