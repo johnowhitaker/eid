@@ -9,7 +9,7 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import glob, xlrd, os, sys, getopt
+import glob, xlrd, os, sys, re
 from PyQt4 import QtCore, QtGui
 from eid_mainwindow import Ui_MainWindow
 from einfo_dialog import Ui_Dialog
@@ -23,6 +23,7 @@ import argparse
 SPREADSHEET = os.getcwd() + "/../eid_sample_data/elephants.xlsx"
 SHEETNUM = 0
 PHOTODIR = os.getcwd() + "/../eid_sample_data/photos"
+VERBOSE = False
 
 DEFAULT_ORDER = ''
 
@@ -608,15 +609,25 @@ class PhotoViewer(QtGui.QGraphicsView):
 # The main loop - run if we directly run this file.
 if __name__ == "__main__":
 
-    # Parse comand line arguments
+    # Parse comand line arguments - work in progress
     parser = argparse.ArgumentParser(description='Elephantphotoidentification app')
-    parser.add_argument('--data', nargs='?', help='Spreadsheet or .csv')
-    parser.add_argument('--sheetnum', nargs='?', help='Only if using spreadsheet')
-    parser.add_argument('--photodir', nargs='?', help='Base folder with photos')
+    parser.add_argument('-d', '--data', nargs='?', help='Spreadsheet or .csv')
+    parser.add_argument('-s', '--sheetnum', nargs='?', help='Only if using spreadsheet')
+    parser.add_argument('-p', '--photodir', nargs='?', help='Base folder with photos')
+    parser.add_argument('-w', '--windowsize', nargs='?', help='Size of the main window (X, Y)')
+    parser.add_argument('-v', '--verbose', help='increase output verbosity', action='store_true')
     args = parser.parse_args(sys.argv[1:])
     PHOTODIR = args.photodir if (args.photodir != None) else PHOTODIR
     SPREADSHEET = args.data if args.data != None else SPREADSHEET
     SHEETNUM = int(args.sheetnum) if args.sheetnum != None else SHEETNUM
+    MAIN_WINDOW_SIZE = tuple(int(v) for v in re.findall("[0-9]+", args.windowsize)) if args.windowsize != None else MAIN_WINDOW_SIZE
+    VERBOSE = args.verbose
+
+    # If -v, show starting PARAMETERS
+    if VERBOSE:
+        print "Starting pachydentify..."
+        print "Using data", SPREADSHEET
+        print "Using photos in", PHOTODIR
 
     # Start the app
     app = QtGui.QApplication(sys.argv)
