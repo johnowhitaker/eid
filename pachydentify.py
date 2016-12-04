@@ -1,13 +1,6 @@
 # App for rapid photo identification of elephants
 # Copyright (c) 2016 Jonathan Whitaker, johnowhitaker@gmail.com
-#
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+# Licenced under the GPL, available at https://www.gnu.org/licenses/gpl-3.0.en.html
 
 import glob, xlrd, os, sys, re
 from PyQt4 import QtCore, QtGui
@@ -38,7 +31,7 @@ E_INSPECTOR_SIZE = (1200, 800)
 # Store features, elephant ID and so on
 class Elephant:
     # So many of these getters and setters are unneccesary - the vars
-    # are mostly public. Need to figure out a best practice.
+    # are mostly public. Slowly replacing them.
     def __init__(self):
         #self.photo_folder = photof
         self.photo_folder = ""#"../photos/BH003"
@@ -50,12 +43,12 @@ class Elephant:
         self.photos = []#glob.glob(self.photo_folder+"/*.jpg")
         self.mismatches = 0
 
-    def zeroMismatches(self):
-        self.mismatches = 0
-    def incMismatches(self):
-        self.mismatches += 1
-    def getMisMatches(self):
-        return self.mismatches
+    # def zeroMismatches(self):
+    #     self.mismatches = 0
+    # def incMismatches(self):
+    #     self.mismatches += 1
+    # def getMisMatches(self):
+    #     return self.mismatches
 
     def setPhotoFolder(self, folder):
         self.photo_folder = folder
@@ -68,11 +61,11 @@ class Elephant:
         for p in self.small_photos:
             p = p[:-6] #remove the .small part
 
-    def getPhotos(self): # Is this needed? Or am i being a java guy?
-        return self.photos
+    # def getPhotos(self): # Is this needed? Or am i being a java guy?... Java guy :)
+    #     return self.photos
 
-    def getSmallPhotos(self):
-        return self.small_photos
+    # def getSmallPhotos(self):
+    #     return self.small_photos
 
     def printSelf(self):
         print(self.photos)
@@ -86,8 +79,8 @@ class Elephant:
     def getFeature(self, fname):
         return self.features[fname]
 
-    def getFeatures(self):
-        return self.features
+    # def getFeatures(self):
+    #     return self.features
 
     def setNote(self, fname, value):
         self.notes[fname] = str(value)
@@ -112,7 +105,7 @@ class Herd:
         self.elephants = self.load_from_spreadsheet(filename, sheet_num, photo_folder)
         self.filtered_elephants = [e for e in self.elephants]
         self.sorted_elephants = []
-        self.features = self.elephants[0].getFeatures().keys()
+        self.features = self.elephants[0].features.keys()
         self.possible_values = {f:[] for f in self.features}
         # for each feature, possible values has a corresponding list of values that feature can take on
         for f in self.features:
@@ -157,8 +150,8 @@ class Herd:
             row += 1
         return elephants
 
-    def getFeatures(self):
-        return self.features
+    # def getFeatures(self):
+    #     return self.features
     def getPossibleValues(self, f):
         return self.possible_values[f]
     def getElephants(self):
@@ -169,19 +162,19 @@ class Herd:
         # Loop though, adding matches
         self.filtered_elephants = []
         for e in self.elephants:
-            e.zeroMismatches()
+            e.mismatches = 0
             for f in constraints.keys():
                 if not ((e.getFeature(f) in constraints[f]) or constraints[f] == []):
-                        e.incMismatches()
-            if e.getMisMatches() == 0:
+                        e.mismatches += 1
+            if e.mismatches == 0:
                 self.filtered_elephants.append(e)
         # Loop through again, adding ones that match *
         for e in self.elephants:
-            e.zeroMismatches()
+            e.mismatches = 0
             for f in constraints.keys():
                 if not ((e.getFeature(f) in constraints[f]) or constraints[f] == [] or "*" in constraints[f] or "*" in constraints[f]):
-                        e.incMismatches()
-            if e.getMisMatches() == 0 and e not in self.filtered_elephants:
+                        e.mismatches += 1
+            if e.mismatches == 0 and e not in self.filtered_elephants:
                 self.filtered_elephants.append(e)
         return self.filtered_elephants
 
@@ -191,7 +184,7 @@ class Herd:
         near = 0
         for i in range(n):
             for e in self.elephants:
-                if e.getMisMatches() == n:
+                if e.mismatches == n:
                     self.sorted_elephants.append(e)
                     near += 1
         print "including "+str(near)+" near misses"
@@ -303,7 +296,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
     # Loads data from a spreadsheet into a herd, and create the filter options.
     def load_herd(self, elephants):
         # Loading the data
-        features = elephants[0].getFeatures().keys()
+        features = elephants[0].features.keys()
         possible_values = {f:[] for f in features}
         # for each feature, possible values has a corresponding list of values that feature can take on
         for f in features:
@@ -359,11 +352,11 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             g.setLayout(lay)
             pics = []
             small = False
-            if len(e.getSmallPhotos())!=0:
-                pics = e.getSmallPhotos()
+            if len(e.small_photos)!=0:
+                pics = e.small_photos
                 small = True
-            elif len(e.getPhotos())!=0:
-                pics = e.getPhotos()
+            elif len(e.photos)!=0:
+                pics = e.photos
 
             #Uncomment this for a name before each pic
             # lb1 = QtGui.QLabel(e.getID())
@@ -419,7 +412,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                  parents.append(widget.parent())
         for p in parents:
             e = self.picture_elephants[p.children()[1]]
-            pics = e.getPhotos() #Problem! What if small?
+            pics = e.photos #Problem! What if small?
             index = 0
             for pic in pics:
                 if text in pic:
@@ -522,19 +515,19 @@ class E_INFO_DIALOG(QtGui.QDialog):
             self.close()
         elif e.key() == QtCore.Qt.Key_N:
             self.pic_num += 1
-            if len(self.elephant.getPhotos()) <= self.pic_num:
+            if len(self.elephant.photos) <= self.pic_num:
                 self.pic_num = 0
-            self.setPhoto(self.elephant.getPhotos()[self.pic_num])
+            self.setPhoto(self.elephant.photos[self.pic_num])
 
     def setElephant(self, e, pic_num):
         self.elephant = e
         self.setWindowTitle(e.getID())
         self.pic_num = pic_num
-        self.setPhoto(e.getPhotos()[self.pic_num])
+        self.setPhoto(e.photos[self.pic_num])
         notes = {}
         for n in e.getNotes():
             notes[n] = e.getNotes()[n]
-        for f in e.getFeatures():
+        for f in e.features:
             notes[f] = e.getFeature(f)
         self.setNotes(notes)
 
