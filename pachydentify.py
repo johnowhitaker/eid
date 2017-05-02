@@ -13,7 +13,7 @@ import argparse
 #************************************************************************************
 #   THE IMPORTANT BITS - WILL ADD OTHER PARAMETERS HERE FOR EASY CONFIGURATION     **
 #************************************************************************************
-SPREADSHEET = os.getcwd() + "/../eid_sample_data/elephants.xlsx"
+SPREADSHEET = "/home/jonathan/Downloads/id.xlsm"#os.getcwd() + "/../eid_sample_data/elephants.xlsx" #
 SHEETNUM = 0
 PHOTODIR = os.getcwd() + "/../eid_sample_data/photos"
 VERBOSE = False
