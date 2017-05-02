@@ -3,10 +3,11 @@
 # Licenced under the GPL, available at https://www.gnu.org/licenses/gpl-3.0.en.html
 
 import glob, xlrd, os, sys, re
+from PyQt4 import QtCore, QtGui
 import exifread
 import argparse
 import os, sys
-import Image
+
 
 
 #************************************************************************************
@@ -186,18 +187,52 @@ class Herd:
             e.hidden = False # Un-hide all
         self.filtered_elephants = [e for e in self.elephants]
 
+
+#### If IMAGE:
+# import Image
+# herd = Herd(SPREADSHEET, SHEETNUM, PHOTODIR)
+#
+# for e in herd.getElephants():
+#     for p in e.photos:
+#
+#         size = PHOTO_HEIGHT, PHOTO_HEIGHT
+#         outfile = p+ ".small" #os.path.splitext(p)[0] + ".small"
+#         if p != outfile:
+#             try:
+#                 im = Image.open(p)
+#                 im.thumbnail(size, Image.ANTIALIAS)
+#                 im.save(outfile, "JPEG")
+#                 print "Saved: ", outfile
+#             except IOError:
+#                 print "cannot create thumbnail for '%s'" % p
+
 herd = Herd(SPREADSHEET, SHEETNUM, PHOTODIR)
 
-for e in herd.getElephants():
-    for p in e.photos:
+class Dialog(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(Dialog, self).__init__(parent)
+        self.pic = QtGui.QLabel()
+        for e in herd.getElephants():
+            for p in e.photos:
+                outfile = p+ ".small" #os.path.splitext(p)[0] + ".small"
+                if p != outfile:
+                    try:
+                        pixmap = QtGui.QPixmap(p)
+                        pixmap_resized = pixmap.scaled(PHOTO_HEIGHT, PHOTO_HEIGHT, QtCore.Qt.KeepAspectRatio, transformMode=QtCore.Qt.SmoothTransformation)
+                        pixmap_resized.save(outfile, "JPEG")
+                        print "Saved: ", outfile
+                    except IOError:
+                        print "cannot create thumbnail for '%s'" % p
+        layout = QtGui.QGridLayout()
+        layout.addWidget(self.pic, 1, 0)
+        self.setLayout(layout)
 
-        size = PHOTO_HEIGHT, PHOTO_HEIGHT
-        outfile = p+ ".small" #os.path.splitext(p)[0] + ".small"
-        if p != outfile:
-            try:
-                im = Image.open(p)
-                im.thumbnail(size, Image.ANTIALIAS)
-                im.save(outfile, "JPEG")
-                print "Saved: ", outfile
-            except IOError:
-                print "cannot create thumbnail for '%s'" % p
+def onResize(event):
+    size = dialog.pic.size()
+    dialog.pic.setPixmap(QPixmap(os.getcwd() + "/images/1.jpg").scaled(size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+if __name__ == '__main__':
+    app = QtGui.QApplication(sys.argv)
+    dialog = Dialog()
+    dialog.show()
+    sys.exit(app.exec_())

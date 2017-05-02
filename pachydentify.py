@@ -501,10 +501,11 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                     self.picture_elephants[widget].hidden = True
         print "Filtering"
         self.filter_elephants()
+
     def unhide_all(self, btn):
         for e in self.herd.elephants:
             e.hidden=False
-        self.update_pics_area()
+        self.filter_elephants()
 
 # On clicking a picture, this window pops up
 class E_INFO_DIALOG(QtGui.QDialog):
@@ -549,6 +550,7 @@ class E_INFO_DIALOG(QtGui.QDialog):
 
     def hide(self, btn): #hide the elephant we're currently looking at, and exit
         self.elephant.hidden = True
+        self.parent().filter_elephants()
         self.close()
 
     def setElephant(self, e, pic_num):
