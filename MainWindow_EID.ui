@@ -22,38 +22,6 @@
       </property>
       <widget class="QWidget" name="layoutWidget_2">
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="1" column="0" colspan="5">
-         <widget class="QScrollArea" name="scrl_features_2">
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <widget class="QWidget" name="scrlw_features_2">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>697</width>
-             <height>498</height>
-            </rect>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_5">
-            <item row="0" column="0">
-             <widget class="QTreeView" name="treeView"/>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLineEdit" name="txt_img_filter_2">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="1">
          <widget class="QPushButton" name="btn_reorder_pics">
           <property name="minimumSize">
@@ -65,6 +33,28 @@
           <property name="text">
            <string>Reorder Images</string>
           </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="5">
+         <widget class="QScrollArea" name="scrl_features_2">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrlw_features_2">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>697</width>
+             <height>463</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="1" column="0">
+             <widget class="QTreeView" name="treeView"/>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
         <item row="0" column="2">
@@ -87,10 +77,27 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="4">
+        <item row="0" column="0">
+         <widget class="QLineEdit" name="txt_img_filter_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="btn_unhide_all">
+          <property name="text">
+           <string>Unhide All</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
          <widget class="QPushButton" name="btn_hide_all">
           <property name="text">
-           <string>Hide All</string>
+           <string>Hide Matches</string>
           </property>
          </widget>
         </item>

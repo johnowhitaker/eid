@@ -21,7 +21,7 @@ VERBOSE = False
 DEFAULT_ORDER = ''
 
 MAIN_WINDOW_SIZE = (1200, 800)
-PHOTO_HEIGHT = 800 #<< Add width?
+PHOTO_HEIGHT = 400 #<< Add width?
 
 
 E_INSPECTOR_SIZE = (1200, 800)
@@ -222,6 +222,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
         self.ui.btn_reorder_pics.clicked.connect(self.show_text_filtered_images)
         self.ui.btn_hide_all.clicked.connect(self.hide_all)
+        self.ui.btn_unhide_all.clicked.connect(self.unhide_all)
 
         # Menu
         self.statusBar()
@@ -268,8 +269,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 value.setCheckState(0)
                 v += 1
             i += 1
-        for e in self.herd.elephants:
-            e.hidden=False
+        self.unhide_all("b")
 
     #Ignore - UI stuff
     def clickable(self, widget):
@@ -297,6 +297,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
 
     # Run when the "Apply Filter" button is clicked
     def filterClicked(self, btn):
+        print "Applying filter"
         self.filter_elephants()
 
     # Loads data from a spreadsheet into a herd, and create the filter options.
@@ -437,8 +438,8 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         print len(elephants), "match criteria"
         # Adding the pictures, and clicking on them calls show_notes
         self.update_pics_area(elephants)
-        self.ui.btn_apply_filter.clicked.connect(self.filterClicked) #<<<<< These two lines???
-        self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
+        # self.ui.btn_apply_filter.clicked.connect(self.filterClicked) #<<<<< These two lines???
+        # self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
 
     def show_notes(self, lb):
         e = self.picture_elephants[lb]
@@ -468,6 +469,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.scaleImages(self.photo_height, self.photo_height)
 
     def filter_elephants(self):
+        print "filtering elephants"
         root = self.model.invisibleRootItem() # get model properly?
         filter_values= {}
         i = 0
@@ -492,10 +494,17 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.update_herd(filtered_elephants)
 
     def hide_all(self, btn):
+        print "Hiding all"
         for widget in self.picture_elephants:
-            for ellie in self.heard.getElephants():
+            for ellie in self.herd.filtered_elephants:
                 if (ellie.getID() == self.picture_elephants[widget].getID()):
                     self.picture_elephants[widget].hidden = True
+        print "Filtering"
+        self.filter_elephants()
+    def unhide_all(self, btn):
+        for e in self.herd.elephants:
+            e.hidden=False
+        self.update_pics_area()
 
 # On clicking a picture, this window pops up
 class E_INFO_DIALOG(QtGui.QDialog):
