@@ -270,7 +270,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 value.setCheckState(0)
                 v += 1
             i += 1
-        self.unhide_all("b")
+        self.unhide_all("not_a_button")
 
     #Ignore - UI stuff
     def clickable(self, widget):
@@ -435,8 +435,9 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 if index != 0:
                     e.photos[0], e.photos[0+index] = e.photos[0+index], e.photos[0]
                     e.small_photos[0], e.small_photos[0+index] = e.small_photos[0+index], e.small_photos[0]
-
-            self.update_pics_area(self.herd.getElephants())
+            for i in reversed(range(self.ui.scrlw.layout().count())):
+                self.ui.scrlw.layout().itemAt(i).widget().setParent(None)
+            self.init_picture_area(self.herd.getElephants())
                     #print "swapping" + pics[index]
         # self.init_picture_area(self.herd.filtered_elephants)
 
