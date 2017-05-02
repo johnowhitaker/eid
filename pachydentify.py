@@ -21,7 +21,7 @@ VERBOSE = False
 DEFAULT_ORDER = ''
 
 MAIN_WINDOW_SIZE = (1200, 800)
-PHOTO_HEIGHT = 400 #<< Add width?
+PHOTO_HEIGHT = 600 #<< Add width?
 
 
 E_INSPECTOR_SIZE = (1200, 800)
@@ -223,6 +223,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.ui.btn_reorder_pics.clicked.connect(self.show_text_filtered_images)
         self.ui.btn_hide_all.clicked.connect(self.hide_all)
         self.ui.btn_unhide_all.clicked.connect(self.unhide_all)
+        self.ui.btn_load_target.clicked.connect(self.load_target)
 
         # Menu
         self.statusBar()
@@ -372,10 +373,10 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             # g.layout().addWidget(lb1)
 
             # Put smallest pic (template) first
-            for i in range(len(pics)):
-                p = pics[i]
-                if os.stat(p).st_size<os.stat(pics[0]).st_size:
-                    pics[0], pics[i] = pics[i], pics[0]
+            # for i in range(len(pics)):
+            #     p = pics[i]
+            #     if os.stat(p).st_size<os.stat(pics[0]).st_size:
+            #         pics[0], pics[i] = pics[i], pics[0]
 
             # Put left or right pic first
             # text = self.ui.txt_img_filter.text()
@@ -394,7 +395,9 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                     lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
                 else:
-                    lb.setPixmap(QtGui.QPixmap(p))#.scaled(self.photo_height, self.photo_height, QtCore.Qt.KeepAspectRatio))
+                    lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
+                    lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation))
+                    #lb.setPixmap(QtGui.QPixmap(p))#<<<<<uncomment and comment two above to keep following small (faster)
                 #Overlay the elephant name and date taken
                 f = open(p, 'rb')
                 tags = exifread.process_file(f) #Investigate piexif ?
@@ -412,22 +415,29 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             self.ui.scrlw.layout().addWidget(g)
 
     def show_text_filtered_images(self, w): # currently not working
-        text = self.ui.txt_img_filter.text()
-        parents = []
-        for widget in self.picture_elephants:
-             if widget.parent() not in parents:
-                 parents.append(widget.parent())
-        for p in parents:
-            e = self.picture_elephants[p.children()[1]]
-            pics = e.photos #Problem! What if small?
-            index = 0
-            for pic in pics:
-                if text in pic:
-                    index = pics.index(pic)
-                    break
-            if index != 0:
-                p.children()[1], p.children()[1+index] = p.children()[1+index], p.children()[1]
-                print "swapping" + pics[index]
+        btn = QtGui.QPushButton("Open Input Dialog")
+        text, result = QtGui.QInputDialog.getText(self, "Re-order images", "Enter text filter")
+        if result:
+            print "Reordering images: \"" + text + "\""
+            # parents = []
+            # for widget in self.picture_elephants:
+            #      if widget.parent() not in parents:
+            #          parents.append(widget.parent())
+            #for p in parents:
+            for e in self.herd.getElephants():
+                #e = self.picture_elephants[p.children()[1]]
+                pics = e.photos #Problem! What if small?
+                index = 0
+                for pic in pics:
+                    if text in pic:
+                        index = pics.index(pic)
+                        break
+                if index != 0:
+                    e.photos[0], e.photos[0+index] = e.photos[0+index], e.photos[0]
+                    e.small_photos[0], e.small_photos[0+index] = e.small_photos[0+index], e.small_photos[0]
+
+            self.update_pics_area(self.herd.getElephants())
+                    #print "swapping" + pics[index]
         # self.init_picture_area(self.herd.filtered_elephants)
 
     def update_herd(self, elephants):
@@ -459,7 +469,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
     def scaleImages(self, width, height):
         #self.ui.statusBar().showMessage("Hello")
         for lb in self.picture_elephants.keys(): #the labels with pictures
-            lb.setPixmap(lb.pixmap().scaled(height, height, QtCore.Qt.KeepAspectRatio))
+            lb.setPixmap(lb.pixmap().scaled(height, height, QtCore.Qt.KeepAspectRatio, transformMode=QtCore.Qt.SmoothTransformation))
 
     def zoom_in_images(self):
         self.photo_height += 100
@@ -506,6 +516,15 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         for e in self.herd.elephants:
             e.hidden=False
         self.filter_elephants()
+
+    def load_target(self, btn):
+        fname = QtGui.QFileDialog.getOpenFileName(self, 'Open file', PHOTODIR,"Image files (*.jpg *.png)")
+        #self.ui.label_target_text.setText(fname)
+        self.ui.label_target.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
+        pixmap = QtGui.QPixmap(fname)
+        scaled_pixmap = pixmap.scaled(PHOTO_HEIGHT, PHOTO_HEIGHT, QtCore.Qt.KeepAspectRatio, transformMode=QtCore.Qt.SmoothTransformation)
+        self.ui.label_target.setPixmap(scaled_pixmap)
+
 
 # On clicking a picture, this window pops up
 class E_INFO_DIALOG(QtGui.QDialog):
