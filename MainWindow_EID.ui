@@ -32,13 +32,13 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>694</width>
+             <width>697</width>
              <height>498</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_5">
             <item row="0" column="0">
-             <widget class="QTreeView" name="treeView_2"/>
+             <widget class="QTreeView" name="treeView"/>
             </item>
            </layout>
           </widget>
@@ -55,7 +55,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QPushButton" name="btn_reorder_pics_2">
+         <widget class="QPushButton" name="btn_reorder_pics">
           <property name="minimumSize">
            <size>
             <width>10</width>
@@ -68,7 +68,7 @@
          </widget>
         </item>
         <item row="0" column="2">
-         <widget class="QPushButton" name="btn_clear_filter_2">
+         <widget class="QPushButton" name="btn_clear_filter">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -81,9 +81,16 @@
          </widget>
         </item>
         <item row="0" column="3">
-         <widget class="QPushButton" name="btn_apply_filter_2">
+         <widget class="QPushButton" name="btn_apply_filter">
           <property name="text">
            <string>Apply FIlter</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="btn_hide_all">
+          <property name="text">
+           <string>Hide All</string>
           </property>
          </widget>
         </item>
@@ -105,13 +112,13 @@
        <property name="widgetResizable">
         <bool>true</bool>
        </property>
-       <widget class="QWidget" name="scrlw_2">
+       <widget class="QWidget" name="scrlw">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>76</width>
-          <height>533</height>
+          <width>73</width>
+          <height>535</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -133,7 +140,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

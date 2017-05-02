@@ -13,15 +13,15 @@ import argparse
 #************************************************************************************
 #   THE IMPORTANT BITS - WILL ADD OTHER PARAMETERS HERE FOR EASY CONFIGURATION     **
 #************************************************************************************
-SPREADSHEET = "/home/jonathan/Downloads/id.xlsm"#os.getcwd() + "/../eid_sample_data/elephants.xlsx" #
+SPREADSHEET = "/home/jonathan/Elephant_MAY/raw_data/Elephants.xlsx"#os.getcwd() + "/../eid_sample_data/elephants.xlsx" #
 SHEETNUM = 0
-PHOTODIR = os.getcwd() + "/../eid_sample_data/photos"
+PHOTODIR = "/home/jonathan/Elephant_MAY/HIP_ID_PHOTOS_TIM_MAY"
 VERBOSE = False
 
 DEFAULT_ORDER = ''
 
 MAIN_WINDOW_SIZE = (1200, 800)
-PHOTO_HEIGHT = 400 #<< Add width?
+PHOTO_HEIGHT = 800 #<< Add width?
 
 
 E_INSPECTOR_SIZE = (1200, 800)
@@ -42,6 +42,7 @@ class Elephant:
         self.notes = {}
         self.photos = []#glob.glob(self.photo_folder+"/*.jpg")
         self.mismatches = 0
+        self.hidden = False # Allow hiding the elephants
 
     # def zeroMismatches(self):
     #     self.mismatches = 0
@@ -140,7 +141,7 @@ class Herd:
             elif os.path.isdir(photo_folder+"/" + e.getID()):
                 e.setPhotoFolder(photo_folder+"/" + e.getID())
 
-            # fix this <<<
+            # Same for small (assuming they're in the same folder)- could make this cleaner <<
             if os.path.isdir(photo_folder+"/" + e.getID().upper()):
                 e.setSmallPhotoFolder(photo_folder+"/" + e.getID().upper())
             elif os.path.isdir(photo_folder+"/" + e.getID()):
@@ -191,6 +192,8 @@ class Herd:
         return self.sorted_elephants
 
     def clearFilters():
+        for e in self.elephants:
+            e.hidden = False # Un-hide all
         self.filtered_elephants = [e for e in self.elephants]
 
 #######################################################################################
@@ -200,7 +203,7 @@ class Herd:
 class EID_MAINWINDOW(QtGui.QMainWindow):
 
     picture_elephants = {}
-    photo_height = 400
+    photo_height = PHOTO_HEIGHT
 
     def __init__(self, spreadsheet, sheet_num,  photo_folder, parent=None):
         # UI from designer
@@ -218,6 +221,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
         self.ui.btn_reorder_pics.clicked.connect(self.show_text_filtered_images)
+        self.ui.btn_hide_all.clicked.connect(self.hide_all)
 
         # Menu
         self.statusBar()
@@ -241,13 +245,13 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(QtGui.qApp.quit)
         fileMenu.addAction(exitAction)
-
         self.load_herd(self.herd.getElephants())
         self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
 
         self.resize(1200, 800) ## Fix <<<
 
     # GO through every item in the tree view and set to un-checked. Doeasn't apply filter
+    # Also unhides any hidden elephants
     def clearFilters(self, btn):
         root = self.model.invisibleRootItem() # get model properly?
         filter_values= {}
@@ -264,6 +268,8 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 value.setCheckState(0)
                 v += 1
             i += 1
+        for e in self.herd.elephants:
+            e.hidden=False
 
     #Ignore - UI stuff
     def clickable(self, widget):
@@ -335,7 +341,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             e = self.picture_elephants[widget]
             keeping = False
             for ellie in elephants:
-                if ellie.getID() == e.getID():
+                if (ellie.getID() == e.getID()) and not ellie.hidden:
                     keeping = True
                     break
             if keeping:
@@ -384,7 +390,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             for p in pics:
                 lb = QtGui.QLabel()
                 if not small:
-                    lb.setGeometry(10, 10, 400, 400)
+                    lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
                 else:
                     lb.setPixmap(QtGui.QPixmap(p))#.scaled(self.photo_height, self.photo_height, QtCore.Qt.KeepAspectRatio))
@@ -431,6 +437,8 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         print len(elephants), "match criteria"
         # Adding the pictures, and clicking on them calls show_notes
         self.update_pics_area(elephants)
+        self.ui.btn_apply_filter.clicked.connect(self.filterClicked) #<<<<< These two lines???
+        self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
 
     def show_notes(self, lb):
         e = self.picture_elephants[lb]
@@ -483,6 +491,12 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         filtered_elephants = self.herd.filterLoose(filter_values, 0) # <<<<<<< Change to 0 to do strict filter
         self.update_herd(filtered_elephants)
 
+    def hide_all(self, btn):
+        for widget in self.picture_elephants:
+            for ellie in self.heard.getElephants():
+                if (ellie.getID() == self.picture_elephants[widget].getID()):
+                    self.picture_elephants[widget].hidden = True
+
 # On clicking a picture, this window pops up
 class E_INFO_DIALOG(QtGui.QDialog):
     elephant = None
@@ -502,8 +516,10 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.splitter.setSizes([1000, 200])
 
         self.resize(1200, 800)
-        self.setGeometry(400, 0, 1200, 800)
+        self.setGeometry(PHOTO_HEIGHT, 0, 1200, 800)
 
+        self.ui.btn_next.clicked.connect(self.next)
+        self.ui.btn_hide.clicked.connect(self.hide)
 
         self.pic_num = 0
         if self.elephant != None:
@@ -514,10 +530,17 @@ class E_INFO_DIALOG(QtGui.QDialog):
         if e.key() == QtCore.Qt.Key_Escape:
             self.close()
         elif e.key() == QtCore.Qt.Key_N:
-            self.pic_num += 1
-            if len(self.elephant.photos) <= self.pic_num:
-                self.pic_num = 0
-            self.setPhoto(self.elephant.photos[self.pic_num])
+            self.next("not_a_button") #yuk :)
+
+    def next(self, btn): # Go to the next pic of this elephant
+        self.pic_num += 1
+        if len(self.elephant.photos) <= self.pic_num:
+            self.pic_num = 0
+        self.setPhoto(self.elephant.photos[self.pic_num])
+
+    def hide(self, btn): #hide the elephant we're currently looking at, and exit
+        self.elephant.hidden = True
+        self.close()
 
     def setElephant(self, e, pic_num):
         self.elephant = e
