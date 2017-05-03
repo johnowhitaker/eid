@@ -6,6 +6,7 @@ import glob, xlrd, os, sys, re
 from PyQt4 import QtCore, QtGui
 from eid_mainwindow import Ui_MainWindow
 from einfo_dialog import Ui_Dialog
+from collections import OrderedDict
 import exifread
 import argparse
 
@@ -38,8 +39,8 @@ class Elephant:
         self.photos = []
         self.small_photos = []
         self.eid = "" # Elephant ID
-        self.features = {}
-        self.notes = {}
+        self.features = OrderedDict()
+        self.notes = OrderedDict()
         self.photos = []#glob.glob(self.photo_folder+"/*.jpg")
         self.mismatches = 0
         self.hidden = False # Allow hiding the elephants
@@ -107,7 +108,7 @@ class Herd:
         self.filtered_elephants = [e for e in self.elephants]
         self.sorted_elephants = []
         self.features = self.elephants[0].features.keys()
-        self.possible_values = {f:[] for f in self.features}
+        self.possible_values = OrderedDict([(f, []) for f in self.features])
         # for each feature, possible values has a corresponding list of values that feature can take on
         for f in self.features:
             self.possible_values[f].append("")
@@ -202,7 +203,7 @@ class Herd:
 # The main window - criteria on the left and pics on the right.
 class EID_MAINWINDOW(QtGui.QMainWindow):
 
-    picture_elephants = {}
+    picture_elephants = OrderedDict()
     photo_height = PHOTO_HEIGHT
 
     def __init__(self, spreadsheet, sheet_num,  photo_folder, parent=None):
@@ -256,7 +257,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
     # Also unhides any hidden elephants
     def clearFilters(self, btn):
         root = self.model.invisibleRootItem() # get model properly?
-        filter_values= {}
+        filter_values= OrderedDict()
         i = 0
         while True:
             item = root.child(i)
@@ -305,7 +306,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
     def load_herd(self, elephants):
         # Loading the data
         features = elephants[0].features.keys()
-        possible_values = {f:[] for f in features}
+        possible_values = OrderedDict([(f, []) for f in features])
         # for each feature, possible values has a corresponding list of values that feature can take on
         for f in features:
             possible_values[f].append("*")
@@ -358,14 +359,12 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             g = QtGui.QWidget()
             lay = QtGui.QHBoxLayout()
             g.setLayout(lay)
-            pics = []
             small = False
             if len(e.small_photos)!=0:
-                pics = e.small_photos
                 small = True
             elif len(e.photos)!=0:
-                pics = e.photos
-
+                e.small_photos = e.photos
+            print e.small_photos
             #Uncomment this for a name before each pic
             # lb1 = QtGui.QLabel(e.getID())
             # self.picture_elephants[lb1] = e
@@ -389,15 +388,16 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             #         #text_appearences += 1
             #         pics[1], pics[i] = pics[i], pics[1]
 
-            for p in pics:
+            for p in e.small_photos:
                 lb = QtGui.QLabel()
                 if not small:
                     lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
                 else:
-                    lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
-                    lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation))
-                    #lb.setPixmap(QtGui.QPixmap(p))#<<<<<uncomment and comment two above to keep following small (faster)
+                    #lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
+                    #lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation))
+                    lb.setPixmap(QtGui.QPixmap(p))#<<<<<uncomment and comment two above to keep following small (faster)
+                lb.setToolTip(str(e.small_photos.index(p)))
                 #Overlay the elephant name and date taken
                 f = open(p, 'rb')
                 tags = exifread.process_file(f) #Investigate piexif ?
@@ -419,21 +419,22 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         text, result = QtGui.QInputDialog.getText(self, "Re-order images", "Enter text filter")
         if result:
             print "Reordering images: \"" + text + "\""
-            # parents = []
-            # for widget in self.picture_elephants:
-            #      if widget.parent() not in parents:
-            #          parents.append(widget.parent())
-            #for p in parents:
             for e in self.herd.getElephants():
-                #e = self.picture_elephants[p.children()[1]]
-                pics = e.photos #Problem! What if small?
                 index = 0
-                for pic in pics:
+                for pic in e.photos:
                     if text in pic:
-                        index = pics.index(pic)
+                        index = e.photos.index(pic)
                         break
                 if index != 0:
+                    print e.getID(), index
                     e.photos[0], e.photos[0+index] = e.photos[0+index], e.photos[0]
+                index = 0
+                for pic in e.small_photos:
+                    if text in pic:
+                        index = e.small_photos.index(pic)
+                        break
+                if index != 0:
+                    print e.getID(), index
                     e.small_photos[0], e.small_photos[0+index] = e.small_photos[0+index], e.small_photos[0]
             for i in reversed(range(self.ui.scrlw.layout().count())):
                 self.ui.scrlw.layout().itemAt(i).widget().setParent(None)
@@ -453,15 +454,14 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         # self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
 
     def show_notes(self, lb):
+        print int(lb.toolTip())
         e = self.picture_elephants[lb]
-        pic_num = 0
-        for label in lb.parent().children()[1:]:
-            if label == lb:
-                pic_num = lb.parent().children().index(lb)-1
-                break
-            else:
-                pic_num += 1
-
+        pic_num = int(lb.toolTip())
+        print e.small_photos
+        # for label in lb.parent().children():
+        #     if label == lb:
+        #         pic_num = lb.parent().children().index(lb)-1
+        #         break
         print "Examining EID: ", e.getID()
         self.selected_e = e
         self.e_info_diag.setElephant(e, pic_num)
@@ -482,7 +482,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
     def filter_elephants(self):
         print "filtering elephants"
         root = self.model.invisibleRootItem() # get model properly?
-        filter_values= {}
+        filter_values= OrderedDict()
         i = 0
         while True:
             item = root.child(i)
@@ -577,8 +577,8 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.elephant = e
         self.setWindowTitle(e.getID())
         self.pic_num = pic_num
-        self.setPhoto(e.photos[self.pic_num])
-        notes = {}
+        self.setPhoto(e.small_photos[self.pic_num][:-6]) # for some reason, small photos order is right but not photos order. Sowe deduce the name from the small (-last six chars)
+        notes = OrderedDict()
         for n in e.getNotes():
             notes[n] = e.getNotes()[n]
         for f in e.features:
