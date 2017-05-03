@@ -18,11 +18,12 @@ SPREADSHEET = "/home/jonathan/Elephant_MAY/raw_data/Elephants.xlsx"#os.getcwd() 
 SHEETNUM = 0
 PHOTODIR = "/home/jonathan/Elephant_MAY/HIP_ID_PHOTOS_TIM_MAY"
 VERBOSE = False
+SCALE_SMALLS = False
 
 DEFAULT_ORDER = ''
 
 MAIN_WINDOW_SIZE = (1200, 800)
-PHOTO_HEIGHT = 600 #<< Add width?
+PHOTO_SIZE = 600
 
 
 E_INSPECTOR_SIZE = (1200, 800)
@@ -44,13 +45,6 @@ class Elephant:
         self.photos = []#glob.glob(self.photo_folder+"/*.jpg")
         self.mismatches = 0
         self.hidden = False # Allow hiding the elephants
-
-    # def zeroMismatches(self):
-    #     self.mismatches = 0
-    # def incMismatches(self):
-    #     self.mismatches += 1
-    # def getMisMatches(self):
-    #     return self.mismatches
 
     def setPhotoFolder(self, folder):
         self.photo_folder = folder
@@ -80,9 +74,6 @@ class Elephant:
 
     def getFeature(self, fname):
         return self.features[fname]
-
-    # def getFeatures(self):
-    #     return self.features
 
     def setNote(self, fname, value):
         self.notes[fname] = str(value)
@@ -131,12 +122,12 @@ class Herd:
             while column<sheet.ncols:
                 val = sheet.cell(row, column).value
                 heading = sheet.cell(0, column).value # First row has headings
-                if not "*" in heading: # Add a * to a heading for special treatment
+                if not "*" in heading: # Add a * to a heading for special treatment <<<<<<<<< Add a photo folder option here <<<<<<
                     e.setFeature(str(heading), val)
                 else:
                     e.setNote(str(heading), val)
                 column +=1
-            # :(
+            # :( don't like this - will be fixed if we add a photo folder column (we should)
             if os.path.isdir(photo_folder+"/" + e.getID().upper()):
                 e.setPhotoFolder(photo_folder+"/" + e.getID().upper())
             elif os.path.isdir(photo_folder+"/" + e.getID()):
@@ -152,10 +143,9 @@ class Herd:
             row += 1
         return elephants
 
-    # def getFeatures(self):
-    #     return self.features
     def getPossibleValues(self, f):
         return self.possible_values[f]
+
     def getElephants(self):
         return self.elephants
 
@@ -180,17 +170,18 @@ class Herd:
                 self.filtered_elephants.append(e)
         return self.filtered_elephants
 
-    def filterLoose(self, constraints, n):
-        self.filter(constraints)
-        self.sorted_elephants = [e for e in self.filtered_elephants]
-        near = 0
-        for i in range(n):
-            for e in self.elephants:
-                if e.mismatches == n:
-                    self.sorted_elephants.append(e)
-                    near += 1
-        print "including "+str(near)+" near misses"
-        return self.sorted_elephants
+    # Not currently using this as we decided '*' worked better.
+    # def filterLoose(self, constraints, n):
+    #     self.filter(constraints)
+    #     self.sorted_elephants = [e for e in self.filtered_elephants]
+    #     near = 0
+    #     for i in range(n):
+    #         for e in self.elephants:
+    #             if e.mismatches == n:
+    #                 self.sorted_elephants.append(e)
+    #                 near += 1
+    #     print "including "+str(near)+" near misses"
+    #     return self.sorted_elephants
 
     def clearFilters():
         for e in self.elephants:
@@ -204,7 +195,7 @@ class Herd:
 class EID_MAINWINDOW(QtGui.QMainWindow):
 
     picture_elephants = OrderedDict()
-    photo_height = PHOTO_HEIGHT
+    photo_height = PHOTO_SIZE
 
     def __init__(self, spreadsheet, sheet_num,  photo_folder, parent=None):
         # UI from designer
@@ -212,13 +203,14 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        # For info on specific ellies
+        # For info on specific ellies (separate window opened on click)
         self.e_info_diag = E_INFO_DIALOG(self)
         self.selected_e = None
 
+        # Where the elephants are stored
         self.herd = Herd(spreadsheet, sheet_num, photo_folder)
 
-        # Connect btn_load_herd to function
+        # Connect buttons to appropriate functions
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
         self.ui.btn_reorder_pics.clicked.connect(self.show_text_filtered_images)
@@ -251,7 +243,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.load_herd(self.herd.getElephants())
         self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
 
-        self.resize(1200, 800) ## Fix <<<
+        self.resize(1200, 800) ## Starting with a fixed size for now.
 
     # GO through every item in the tree view and set to un-checked. Doeasn't apply filter
     # Also unhides any hidden elephants
@@ -273,7 +265,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             i += 1
         self.unhide_all("not_a_button")
 
-    #Ignore - UI stuff
+    #Ignore - UI stuff. Allows labels to be clickable
     def clickable(self, widget):
         class Filter(QtCore.QObject):
             clicked = QtCore.pyqtSignal(QtGui.QWidget)
@@ -337,7 +329,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         tree.setModel(model)
         tree.show()
 
-    # Inefficient, and struggles with large images apparetly << fixed? Yup :)
+    # Inefficient, and struggles with large images apparetly << fixed? Yup :) This comment kept for entertainment
     def update_pics_area(self, elephants):
         print "updating picture area"
         for widget in self.picture_elephants:
@@ -355,7 +347,6 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
     #Adding the pictures, and clicking on them calls show_notes
     def init_picture_area(self, elephants):
         for e in elephants:
-
             g = QtGui.QWidget()
             lay = QtGui.QHBoxLayout()
             g.setLayout(lay)
@@ -364,40 +355,33 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 small = True
             elif len(e.photos)!=0:
                 e.small_photos = e.photos
-            print e.small_photos
+            #print e.small_photos
+
             #Uncomment this for a name before each pic
             # lb1 = QtGui.QLabel(e.getID())
             # self.picture_elephants[lb1] = e
             # self.clickable(lb1).connect(self.show_notes)
             # g.layout().addWidget(lb1)
 
-            # Put smallest pic (template) first
+            # Put smallest pic (usually template) first. Dont use
             # for i in range(len(pics)):
             #     p = pics[i]
             #     if os.stat(p).st_size<os.stat(pics[0]).st_size:
             #         pics[0], pics[i] = pics[i], pics[0]
 
-            # Put left or right pic first
-            # text = self.ui.txt_img_filter.text()
-            # if text == '':
-            #     text = DEFAULT_ORDER
-            # #text_appearences = 0
-            # for i in range(len(pics)):
-            #     p = pics[i]
-            #     if str(text) in str(p):
-            #         #text_appearences += 1
-            #         pics[1], pics[i] = pics[i], pics[1]
-
             for p in e.small_photos:
                 lb = QtGui.QLabel()
                 if not small:
-                    lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
+                    lb.setGeometry(10, 10, PHOTO_SIZE, PHOTO_SIZE)
                     lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio))
                 else:
-                    #lb.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
-                    #lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation))
-                    lb.setPixmap(QtGui.QPixmap(p))#<<<<<uncomment and comment two above to keep following small (faster)
-                lb.setToolTip(str(e.small_photos.index(p)))
+                    if SCALE_SMALLS:
+                        lb.setGeometry(10, 10, PHOTO_SIZE, PHOTO_SIZE)
+                        lb.setPixmap(QtGui.QPixmap(p).scaled(lb.size(), QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation))
+                    else:
+                        lb.setPixmap(QtGui.QPixmap(p)) # Whatever size the smalls are. Speeds up startup
+
+                lb.setToolTip(str(e.small_photos.index(p))) # Used for keeping track of which image is which << Try without now that main issue fixed?
                 #Overlay the elephant name and date taken
                 f = open(p, 'rb')
                 tags = exifread.process_file(f) #Investigate piexif ?
@@ -414,6 +398,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             lay.addStretch(1)
             self.ui.scrlw.layout().addWidget(g)
 
+    # Let the user enter a string. If there is an image with that in it's name it appears first.
     def show_text_filtered_images(self, w): # currently not working
         btn = QtGui.QPushButton("Open Input Dialog")
         text, result = QtGui.QInputDialog.getText(self, "Re-order images", "Enter text filter")
@@ -439,26 +424,20 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             for i in reversed(range(self.ui.scrlw.layout().count())):
                 self.ui.scrlw.layout().itemAt(i).widget().setParent(None)
             self.init_picture_area(self.herd.getElephants())
-                    #print "swapping" + pics[index]
-        # self.init_picture_area(self.herd.filtered_elephants)
 
     def update_herd(self, elephants):
-
         if len(elephants) == 0:
             print "No matches"
             return 0
         print len(elephants), "match criteria"
-        # Adding the pictures, and clicking on them calls show_notes
         self.update_pics_area(elephants)
-        # self.ui.btn_apply_filter.clicked.connect(self.filterClicked) #<<<<< These two lines???
-        # self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
 
     def show_notes(self, lb):
-        print int(lb.toolTip())
+        #print int(lb.toolTip())
         e = self.picture_elephants[lb]
         pic_num = int(lb.toolTip())
-        print e.small_photos
-        # for label in lb.parent().children():
+        #print e.small_photos
+        # for label in lb.parent().children(): <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<!!!!!!!!!
         #     if label == lb:
         #         pic_num = lb.parent().children().index(lb)-1
         #         break
@@ -468,13 +447,13 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.e_info_diag.exec_()
 
     def scaleImages(self, width, height):
-        #self.ui.statusBar().showMessage("Hello")
         for lb in self.picture_elephants.keys(): #the labels with pictures
             lb.setPixmap(lb.pixmap().scaled(height, height, QtCore.Qt.KeepAspectRatio, transformMode=QtCore.Qt.SmoothTransformation))
 
     def zoom_in_images(self):
         self.photo_height += 100
         self.scaleImages(self.photo_height, self.photo_height)
+
     def zoom_out_images(self):
         self.photo_height -= 100
         self.scaleImages(self.photo_height, self.photo_height)
@@ -501,10 +480,10 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                     filter_values[feature].append(str(value.text()))
                 v += 1
             i += 1
-        filtered_elephants = self.herd.filterLoose(filter_values, 0) # <<<<<<< Change to 0 to do strict filter
+        filtered_elephants = self.herd.filter(filter_values, 0) # <<<<<<< Change to 0 to do strict filter
         self.update_herd(filtered_elephants)
 
-    def hide_all(self, btn):
+    def hide_all(self, btn): #Hides all currently visible elephants (i.e. all matches)
         print "Hiding all"
         for widget in self.picture_elephants:
             for ellie in self.herd.filtered_elephants:
@@ -518,12 +497,12 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
             e.hidden=False
         self.filter_elephants()
 
-    def load_target(self, btn):
+    def load_target(self, btn): # A separate pic, of the target we're trying to identify
         fname = QtGui.QFileDialog.getOpenFileName(self, 'Open file', PHOTODIR,"Image files (*.jpg *.png)")
         #self.ui.label_target_text.setText(fname)
-        self.ui.label_target.setGeometry(10, 10, PHOTO_HEIGHT, PHOTO_HEIGHT)
+        self.ui.label_target.setGeometry(10, 10, PHOTO_SIZE, PHOTO_SIZE)
         pixmap = QtGui.QPixmap(fname)
-        scaled_pixmap = pixmap.scaled(PHOTO_HEIGHT, PHOTO_HEIGHT, QtCore.Qt.KeepAspectRatio, transformMode=QtCore.Qt.SmoothTransformation)
+        scaled_pixmap = pixmap.scaled(PHOTO_SIZE, PHOTO_SIZE, QtCore.Qt.KeepAspectRatio, transformMode=QtCore.Qt.SmoothTransformation)
         self.ui.label_target.setPixmap(scaled_pixmap)
 
 
@@ -546,7 +525,7 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.splitter.setSizes([1000, 200])
 
         self.resize(1200, 800)
-        self.setGeometry(PHOTO_HEIGHT, 0, 1200, 800)
+        self.setGeometry(PHOTO_SIZE, 0, 1200, 800)
 
         self.ui.btn_next.clicked.connect(self.next)
         self.ui.btn_hide.clicked.connect(self.hide)
@@ -681,3 +660,7 @@ if __name__ == "__main__":
     myapp = EID_MAINWINDOW(SPREADSHEET, SHEETNUM, PHOTODIR)
     myapp.show()
     sys.exit(app.exec_())
+
+
+
+    #self.ui.statusBar().showMessage("Hello")
