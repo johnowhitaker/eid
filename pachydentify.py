@@ -14,11 +14,15 @@ import argparse
 #************************************************************************************
 #   THE IMPORTANT BITS - WILL ADD OTHER PARAMETERS HERE FOR EASY CONFIGURATION     **
 #************************************************************************************
-SPREADSHEET = "/home/jonathan/Elephant_MAY/raw_data/Elephants.xlsx"#os.getcwd() + "/../eid_sample_data/elephants.xlsx" #
+# NB - These are overwritten by config.py, so rather edit there. Here just in case
+# config.py is not present.
+SPREADSHEET = "/home/jonathan/Elephant_MAY/raw_data/Elephants.xlsx"
 SHEETNUM = 0
 PHOTODIR = "/home/jonathan/Elephant_MAY/HIP_ID_PHOTOS_TIM_MAY"
 VERBOSE = False
 SCALE_SMALLS = False
+
+GENERATE_SMALLS = False
 
 DEFAULT_ORDER = ''
 
@@ -27,6 +31,14 @@ PHOTO_SIZE = 600
 
 
 E_INSPECTOR_SIZE = (1200, 800)
+
+
+if getattr(sys, 'frozen', False):
+    application_path = os.path.dirname(sys.executable)
+elif __file__:
+    application_path = os.path.dirname(__file__)
+
+execfile(application_path+"/config.py")
 
 #######################################################################################
 
@@ -244,6 +256,21 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
 
         self.resize(1200, 800) ## Starting with a fixed size for now.
+
+        if GENERATE_SMALLS:
+            print "Generating smalls - may take some time if this is the first run"
+            self.pic = QtGui.QLabel()
+            for e in self.herd.getElephants():
+                for p in e.photos:
+                    outfile = p+ ".small" #os.path.splitext(p)[0] + ".small"
+                    if p != outfile and not os.path.exists(outfile):
+                        try:
+                            pixmap = QtGui.QPixmap(p)
+                            pixmap_resized = pixmap.scaled(PHOTO_SIZE, PHOTO_SIZE, QtCore.Qt.KeepAspectRatio, transformMode=QtCore.Qt.SmoothTransformation)
+                            pixmap_resized.save(outfile, "JPEG")
+                            print "Saved: ", outfile
+                        except IOError:
+                            print "cannot create thumbnail for '%s'" % p
 
     # GO through every item in the tree view and set to un-checked. Doeasn't apply filter
     # Also unhides any hidden elephants
