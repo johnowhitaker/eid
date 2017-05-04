@@ -256,10 +256,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         exitAction.triggered.connect(QtGui.qApp.quit)
         fileMenu.addAction(exitAction)
         self.load_herd(self.herd.getElephants())
-        self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
-
         self.statusBar().showMessage("Displaying "+str(self.n_filtered) + " matches")
-
         self.resize(1200, 800) ## Starting with a fixed size for now. <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< FIX TO USE MAIN_WINDOW_SIZE!!<<<<<<<
 
         if GENERATE_SMALLS:
@@ -277,6 +274,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                         except IOError:
                             print "cannot create thumbnail for '%s'" % p
 
+        self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
     # GO through every item in the tree view and set to un-checked. Doeasn't apply filter
     # Also unhides any hidden elephants
     def clearFilters(self, btn):
