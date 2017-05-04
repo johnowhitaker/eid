@@ -423,6 +423,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                     e.small_photos[0], e.small_photos[0+index] = e.small_photos[0+index], e.small_photos[0]
             for i in reversed(range(self.ui.scrlw.layout().count())):
                 self.ui.scrlw.layout().itemAt(i).widget().setParent(None)
+            self.picture_elephants = {}
             self.init_picture_area(self.herd.getElephants())
 
     def update_herd(self, elephants):
@@ -480,7 +481,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                     filter_values[feature].append(str(value.text()))
                 v += 1
             i += 1
-        filtered_elephants = self.herd.filter(filter_values, 0) # <<<<<<< Change to 0 to do strict filter
+        filtered_elephants = self.herd.filter(filter_values)
         self.update_herd(filtered_elephants)
 
     def hide_all(self, btn): #Hides all currently visible elephants (i.e. all matches)
