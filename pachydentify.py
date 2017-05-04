@@ -222,6 +222,9 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         # Where the elephants are stored
         self.herd = Herd(spreadsheet, sheet_num, photo_folder)
 
+        self.n_filtered = len(self.herd.getElephants())
+        self.n_hidden = 0
+
         # Connect buttons to appropriate functions
         self.ui.btn_apply_filter.clicked.connect(self.filterClicked)
         self.ui.btn_clear_filter.clicked.connect(self.clearFilters)
@@ -255,14 +258,16 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
         self.load_herd(self.herd.getElephants())
         self.init_picture_area(self.herd.getElephants()) # this should be in load herd?
 
-        self.resize(1200, 800) ## Starting with a fixed size for now.
+        self.statusBar().showMessage("Displaying "+str(self.n_filtered) + " matches")
+
+        self.resize(1200, 800) ## Starting with a fixed size for now. <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< FIX TO USE MAIN_WINDOW_SIZE!!<<<<<<<
 
         if GENERATE_SMALLS:
             print "Generating smalls - may take some time if this is the first run"
             self.pic = QtGui.QLabel()
             for e in self.herd.getElephants():
                 for p in e.photos:
-                    outfile = p+ ".small" #os.path.splitext(p)[0] + ".small"
+                    outfile = p+ ".small"
                     if p != outfile and not os.path.exists(outfile):
                         try:
                             pixmap = QtGui.QPixmap(p)
@@ -370,6 +375,7 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 widget.parent().show()
             else:
                 widget.parent().hide()
+        self.statusBar().showMessage("%i Matches "%self.n_filtered + " (%i hidden)" % self.n_hidden)
 
     #Adding the pictures, and clicking on them calls show_notes
     def init_picture_area(self, elephants):
@@ -509,6 +515,11 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                 v += 1
             i += 1
         filtered_elephants = self.herd.filter(filter_values)
+        self.n_filtered = len(filtered_elephants)
+        self.n_hidden = 0
+        for e in filtered_elephants:
+            if e.hidden:
+                self.n_hidden += 1
         self.update_herd(filtered_elephants)
 
     def hide_all(self, btn): #Hides all currently visible elephants (i.e. all matches)
