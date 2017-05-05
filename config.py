@@ -7,6 +7,8 @@ PHOTODIR = "/home/jonathan/Elephant_MAY/HIP_ID_PHOTOS_TIM_MAY"
 # What does verbose do? Nothing, yet
 VERBOSE = False
 
+SHOW_EXIF_DATA = True
+
 # To speed up launch time for debugging, set this to false.
 # Will ignore the photo_size var if small photos are available
 SCALE_SMALLS = False

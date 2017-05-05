@@ -21,6 +21,7 @@ SHEETNUM = 0
 PHOTODIR = "/home/jonathan/Elephant_MAY/HIP_ID_PHOTOS_TIM_MAY"
 VERBOSE = False
 SCALE_SMALLS = False
+SHOW_EXIF_DATA = False
 
 GENERATE_SMALLS = False
 
@@ -413,14 +414,16 @@ class EID_MAINWINDOW(QtGui.QMainWindow):
                         lb.setPixmap(QtGui.QPixmap(p)) # Whatever size the smalls are. Speeds up startup
 
                 lb.setToolTip(str(e.small_photos.index(p))) # Used for keeping track of which image is which << Try without now that main issue fixed?
-                #Overlay the elephant name and date taken
-                f = open(p, 'rb')
-                tags = exifread.process_file(f) #Investigate piexif ?
-                date = ''
-                if 'EXIF DateTimeDigitized' in tags.keys():
-                    date = str(tags['EXIF DateTimeDigitized'])
+                #Overlay the elephant name and optionally date taken
                 lb1 = QtGui.QLabel(lb) # Using a label as a frame - not the best idea but functional.
-                lb1.setText(e.getID() + " - " +date)
+                lb1.setText(e.getID())
+                if SHOW_EXIF_DATA:
+                    f = open(p[:-6], 'rb') # use the large images
+                    tags = exifread.process_file(f) #Investigate piexif ?
+                    date = ''
+                    if 'EXIF DateTimeDigitized' in tags.keys():
+                        date = str(tags['EXIF DateTimeDigitized'])
+                    lb1.setText(e.getID() + " - " +date)
                 lb1.setStyleSheet("QLabel { background-color : white; color : black; }")
 
                 g.layout().addWidget(lb)
@@ -582,6 +585,12 @@ class E_INFO_DIALOG(QtGui.QDialog):
         self.pic_num += 1
         if len(self.elephant.photos) <= self.pic_num:
             self.pic_num = 0
+        self.setPhoto(self.elephant.photos[self.pic_num])
+
+    def prev(self): # Go to the next pic of this elephant not used
+        self.pic_num -= 1
+        if 0 > self.pic_num:
+            self.pic_num = len(self.elephant.photos)
         self.setPhoto(self.elephant.photos[self.pic_num])
 
     def hide(self, btn): #hide the elephant we're currently looking at, and exit
